@@ -2,7 +2,7 @@
 
 ## Joint Dropout ([paper](https://arxiv.org/pdf/2307.12835v1.pdf))
 
-Note [this slightly older paper](https://aclanthology.org/2020.coling-main.304.pdf) from the same authors - their preprocessing pipeline seems similar
+Note [this slightly older paper](https://aclanthology.org/2020.coling-main.304.pdf) from the same authors - their preprocessing pipeline seems similar ([code](https://github.com/aliaraabi/OptTransformer))
 
 [Moses](https://github.com/moses-smt/mosesdecoder), used for "unctuation normalization, tokenization, data cleaning, and true-
 casing" (but [this site](http://www.statmt.org/moses/))
