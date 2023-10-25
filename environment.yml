@@ -1,0 +1,11 @@
+name: cs769
+channels:
+  - conda-forge
+dependencies:
+  - python < 3.12
+  - mosestokenizer
+  - tqdm
+  - pip
+  - pip:
+    - eflomal
+    - subword-nmt
