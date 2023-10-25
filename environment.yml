@@ -5,7 +5,11 @@ dependencies:
   - python < 3.12
   - mosestokenizer
   - tqdm
+  - pytorch
+  - fairseq
   - pip
   - pip:
     - eflomal
     - subword-nmt
+    - torchvision
+    - torchaudio
