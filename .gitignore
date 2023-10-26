@@ -1,4 +1,5 @@
-train.*
+*.en
+*.de
 
 __pycache__
 
