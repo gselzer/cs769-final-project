@@ -4,8 +4,9 @@ from subword_nmt import learn_bpe, apply_bpe
 from sample import sample_source_and_target
 
 ## HyperParameters
-num_samples: int = 100
-num_bpe_tokens: int = 100
+num_samples: int = 10000
+num_bpe_tokens: int = 10000
+purpose = "train"
 
 # Sample source and target
 selected_en, selected_de = sample_source_and_target("de-en/train.tags.de-en.en", "de-en/train.tags.de-en.de", num_samples)
@@ -37,23 +38,23 @@ truecased_de = [[t.lower() for t in s] for s in token_de]
 # Apply Joint Dropout
 
 # Write out intermediate data
-tmp_file_en = "train.sample.en"
+tmp_file_en = f"{purpose}.sample.en"
 with open(tmp_file_en, "w") as f:
     f.write("\n".join(normalized_en))
     f.write("\n")
-tmp_file_de = "train.sample.de"
+tmp_file_de = f"{purpose}.sample.de"
 with open(tmp_file_de, "w") as f:
     f.write("\n".join(normalized_de))
     f.write("\n")
 
 # Apply BPE
-codes_file_en = "train.codes.en"
-bpe_file_en = "train.bpe.en"
+codes_file_en = f"{purpose}.codes.en"
+bpe_file_en = f"{purpose}.bpe.en"
 # TODO: For some reason, I got "Permission denied" when trying to use subprocess - WHY?
 os.system(f"subword-nmt learn-bpe -s {num_bpe_tokens} < {tmp_file_en} > {codes_file_en}")
 os.system(f"subword-nmt apply-bpe -c {codes_file_en} < {tmp_file_en} > {bpe_file_en}")
 
-codes_file_de = "train.codes.de"
-bpe_file_de = "train.bpe.de"
+codes_file_de = f"{purpose}.codes.de"
+bpe_file_de = f"{purpose}.bpe.de"
 os.system(f"subword-nmt learn-bpe -s {num_bpe_tokens} < {tmp_file_de} > {codes_file_de}")
 os.system(f"subword-nmt apply-bpe -c {codes_file_de} < {tmp_file_de} > {bpe_file_de}")

@@ -17,7 +17,17 @@ def sample_source_and_target(source: str, target: str, n: int) -> Tuple[List[str
     xmlless_source = [s for s in text_source if not re.search(tag_pattern, s)]
     xmlless_target = [s for s in text_target if not re.search(tag_pattern, s)]
 
+    # Filter out any strings that have a tag
+    xmlless_source = [s for s in text_source if not re.search(tag_pattern, s)]
+    xmlless_target = [s for s in text_target if not re.search(tag_pattern, s)]
+
     # Randomly sample from the xml-less lines in the files
     selected = random.sample([x for x in zip(xmlless_source, xmlless_target)], n)
 
-    return tuple(zip(*selected))
+    # Filter out any lines where one of the pair is blank.
+    # One time this happens is on line 78520 of the English input data.
+    filtered = [s for s in selected if s[0] and s[1]]
+    if len(selected) != len(filtered):
+        print("Removed some blank lines")
+
+    return tuple(zip(*filtered))
