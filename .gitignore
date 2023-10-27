@@ -1,5 +1,7 @@
 *.en
 *.de
+checkpoints/
+data-bin/
 
 __pycache__
 
