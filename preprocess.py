@@ -1,20 +1,19 @@
 import os
+import random
+from typing import List
 from mosestokenizer import MosesPunctuationNormalizer, MosesTokenizer
 from subword_nmt import learn_bpe, apply_bpe
-from sample import sample_source_and_target
+from sample import read_source_and_target
 
-## HyperParameters
-num_samples: int = 100
-num_bpe_tokens: int = 100
 
 # Sample source and target
-selected_en, selected_de = sample_source_and_target("de-en/train.tags.de-en.en", "de-en/train.tags.de-en.de", num_samples)
+all_en, all_de = read_source_and_target("de-en/train.tags.de-en.en", "de-en/train.tags.de-en.de")
 
 # Normalize sampled source and target
 norm_en = MosesPunctuationNormalizer(lang="en")
 norm_de = MosesPunctuationNormalizer(lang="de")
-normalized_en = [norm_en(s) for s in selected_en]
-normalized_de = [norm_de(s) for s in selected_de]
+normalized_en = [norm_en(s) for s in all_en]
+normalized_de = [norm_de(s) for s in all_de]
 
 # Tokenize sampled source and target
 tokenizer_en = MosesTokenizer(lang="en")
@@ -37,23 +36,50 @@ truecased_de = [[t.lower() for t in s] for s in token_de]
 # Apply Joint Dropout
 
 # Write out intermediate data
-tmp_file_en = "train.sample.en"
+tmp_file_en = "cleaned.en"
+tmp_file_de = "cleaned.de"
 with open(tmp_file_en, "w") as f:
-    f.write("\n".join(normalized_en))
+    f.write("\n".join([s.lower() for s in normalized_en]))
     f.write("\n")
-tmp_file_de = "train.sample.de"
 with open(tmp_file_de, "w") as f:
-    f.write("\n".join(normalized_de))
+    f.write("\n".join([s.lower() for s in normalized_de]))
     f.write("\n")
 
-# Apply BPE
-codes_file_en = "train.codes.en"
-bpe_file_en = "train.bpe.en"
+# Learn BPE
+num_bpe_tokens: int = 10000
+codes_file_en = "codes.en"
+codes_file_de = "codes.de"
 # TODO: For some reason, I got "Permission denied" when trying to use subprocess - WHY?
 os.system(f"subword-nmt learn-bpe -s {num_bpe_tokens} < {tmp_file_en} > {codes_file_en}")
-os.system(f"subword-nmt apply-bpe -c {codes_file_en} < {tmp_file_en} > {bpe_file_en}")
-
-codes_file_de = "train.codes.de"
-bpe_file_de = "train.bpe.de"
 os.system(f"subword-nmt learn-bpe -s {num_bpe_tokens} < {tmp_file_de} > {codes_file_de}")
-os.system(f"subword-nmt apply-bpe -c {codes_file_de} < {tmp_file_de} > {bpe_file_de}")
+os.remove(tmp_file_en)
+os.remove(tmp_file_de)
+
+# Apply BPE to training and validation datasets
+## HyperParameters
+
+def apply_sample_bpe(purpose: str, indices: List[int]):
+    sample_en = [all_en[i] for i in indices]
+    sample_de = [all_de[i] for i in indices]
+    with open("tmp.en", "w") as f:
+        f.write("\n".join(sample_en))
+        f.write("\n")
+    with open("tmp.de", "w") as f:
+        f.write("\n".join(sample_de))
+        f.write("\n")
+
+    os.system(f"subword-nmt apply-bpe -c {codes_file_en} < tmp.en > {purpose}.bpe.en")
+    os.system(f"subword-nmt apply-bpe -c {codes_file_de} < tmp.de > {purpose}.bpe.de")
+
+    os.remove("tmp.en")
+    os.remove("tmp.de")
+    
+
+n_train: int = 10000
+n_validate: int = 1000
+n_test: int = 1000
+
+selected_idx =  random.sample(range(len(all_en)), n_train + n_validate + n_test)
+apply_sample_bpe("train", selected_idx[:n_train])
+apply_sample_bpe("valid", selected_idx[n_train:n_train+n_validate])
+apply_sample_bpe("test", selected_idx[n_train+n_validate:])
