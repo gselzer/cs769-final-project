@@ -13,3 +13,15 @@ Note [this slightly older paper](https://aclanthology.org/2020.coling-main.304.p
 [English-German TED training data](https://wit3.fbk.eu/2014-01)
 
 [CoreNLP](https://stanfordnlp.github.io/CoreNLP/) ([paper](https://stanfordnlp.github.io/CoreNLP/)), used to create constituency trees for the training sentences.
+
+
+# Setup
+Build and activate the conda environment:
+```
+conda env create -f environment.yml
+conda activate cs769
+```
+Run the training pipeline:
+```
+python preprocess.py && ./preprocess.sh && ./train.sh
+```
