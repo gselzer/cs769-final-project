@@ -1,85 +1,97 @@
 import os
+import re
 import random
 from typing import List
 from mosestokenizer import MosesPunctuationNormalizer, MosesTokenizer
 from subword_nmt import learn_bpe, apply_bpe
 from sample import read_source_and_target
 
+def read_and_clean(infile: str, outfile: str):
+    # This pattern will search for any tags
+    delete_tags = ['<url>', '<talkid>', '<keywords>']
+    clean_tags = ['<title>', "</title>", "<description>", "</description>"]
+
+    # Read in the files
+    with open(infile) as f:
+        text_source = f.read().split('\n')
+    
+    cleaned = []
+    for line in text_source:
+        if any([tag in line for tag in delete_tags]):
+            continue
+        for tag in clean_tags:
+            if tag in line:
+                line = line.replace(tag, "")
+        cleaned.append(line)
+
+    # Write out the files
+    with open(outfile, "w") as f:
+        f.write("\n".join(cleaned))
+
+def remove_if_exists(files: List[str]):
+    for file in files:
+        if os.path.exists(file):
+            os.remove(file)
+remove_if_exists(["train.de", "train.en", "valid.de", "valid.en", "test.de", "test.en", "tmp.valid.en", "tmp.valid.de", "tmp.test.de", "tmp.test.en"])
+
 
 # Sample source and target
-all_en, all_de = read_source_and_target("de-en/train.tags.de-en.en", "de-en/train.tags.de-en.de")
+read_and_clean("de-en/train.tags.de-en.en", "tmp.en")
+read_and_clean("de-en/train.tags.de-en.de", "tmp.de")
 
-# Normalize sampled source and target
-norm_en = MosesPunctuationNormalizer(lang="en")
-norm_de = MosesPunctuationNormalizer(lang="de")
-normalized_en = [norm_en(s) for s in all_en]
-normalized_de = [norm_de(s) for s in all_de]
+# Tokenize the data
+os.system("perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads 8 -l en < tmp.en > tmp.tok.en")
+os.system("perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads 8 -l de < tmp.de > tmp.tok.de")
 
-# Tokenize sampled source and target
-tokenizer_en = MosesTokenizer(lang="en")
-tokenizer_de = MosesTokenizer(lang="de")
-token_en = [tokenizer_en(s) for s in normalized_en]
-token_de = [tokenizer_de(s) for s in normalized_de]
+# Clean the data
+os.system("perl mosesdecoder/scripts/training/clean-corpus-n.perl tmp.tok de en tmp.clean 1 175")
 
-# TODO: Data cleaning?
-# Here's what the other paper did: ~/mosesdecoder/scripts/training/clean-corpus-n.perl ~/corpus/news-commentary-v8.fr-en.true fr en ~/corpus/news-commentary-v8.fr-en.clean 1 80
+# Truecase (lowercase) the data
+os.system("perl mosesdecoder/scripts/tokenizer/lowercase.perl < tmp.clean.en > tmp.train.en")
+os.system("perl mosesdecoder/scripts/tokenizer/lowercase.perl < tmp.clean.de > tmp.train.de")
 
-# Truecasing - instead, for now, let's just lowercase stuff
-# BUT here is what the other paper did
-# ~/mosesdecoder/scripts/recaser/train-truecaser.perl --model ~/corpus/truecase-model.en --corpus ~/corpus/news-commentary-v8.fr-en.tok.en
-# ~/mosesdecoder/scripts/recaser/train-truecaser.perl --model ~/corpus/truecase-model.fr --corpus ~/corpus/news-commentary-v8.fr-en.tok.fr
-# ~/mosesdecoder/scripts/recaser/truecase.perl --model ~/corpus/truecase-model.en < ~/corpus/news-commentary-v8.fr-en.tok.en > ~/corpus/news-commentary-v8.fr-en.true.en
-# ~/mosesdecoder/scripts/recaser/truecase.perl --model ~/corpus/truecase-model.fr < ~/corpus/news-commentary-v8.fr-en.tok.fr > ~/corpus/news-commentary-v8.fr-en.true.fr
-truecased_en = [[t.lower() for t in s] for s in token_en]
-truecased_de = [[t.lower() for t in s] for s in token_de]
+# Grab test/validation data
+for file in ['IWSLT14.TED.tst2010', 'IWSLT14.TED.tst2011', 'IWSLT14.TED.tst2012']:
+    for l in ['de', 'en']:
+        with open(f"de-en/{file}.de-en.{l}.xml") as f:
+            lines = f.read().split("\n")
+        cleaned = []
+        for line in lines:
+            if not '<seg id' in line: continue
+            line = re.sub("<seg id=\"\d*\">", "", line)
+            line = re.sub("<\/seg>", "", line)
+            cleaned.append(line)
+        with open(f"tmp.test.{l}", "a") as f:
+            f.write("\n".join(cleaned))
 
-# Apply Joint Dropout
+for file in ['IWSLT14.TED.dev2010', 'IWSLT14.TEDX.dev2012']:
+    for l in ['de', 'en']:
+        with open(f"de-en/{file}.de-en.{l}.xml") as f:
+            lines = f.read().split("\n")
+        cleaned = []
+        for line in lines:
+            if not '<seg id' in line: continue
+            line = re.sub("<seg id=\"\d*\">", "", line)
+            line = re.sub("<\/seg>", "", line)
+            cleaned.append(line)
+        with open(f"tmp.valid.{l}", "a") as f:
+            f.write("\n".join(cleaned))
 
-# Write out intermediate data
-tmp_file_en = "cleaned.en"
-tmp_file_de = "cleaned.de"
-with open(tmp_file_en, "w") as f:
-    f.write("\n".join([s.lower() for s in normalized_en]))
-    f.write("\n")
-with open(tmp_file_de, "w") as f:
-    f.write("\n".join([s.lower() for s in normalized_de]))
-    f.write("\n")
+# Tokenize and clean test/validation data
+for s in ["test", "valid"]:
+    for l in ["de", "en"]:
+        os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads 8 -l {l} < tmp.{s}.{l} > tmp.tok.{l}")
+        os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < tmp.tok.{l} > tmp.{s}.{l}")
+
+
+# TODO Apply Joint Dropout
 
 # Learn BPE
 num_bpe_tokens: int = 10000
-codes_file_en = "codes.en"
-codes_file_de = "codes.de"
-# TODO: For some reason, I got "Permission denied" when trying to use subprocess - WHY?
-os.system(f"subword-nmt learn-bpe -s {num_bpe_tokens} < {tmp_file_en} > {codes_file_en}")
-os.system(f"subword-nmt learn-bpe -s {num_bpe_tokens} < {tmp_file_de} > {codes_file_de}")
-os.remove(tmp_file_en)
-os.remove(tmp_file_de)
+os.system(f"subword-nmt learn-joint-bpe-and-vocab --input tmp.train.en tmp.train.de -s {num_bpe_tokens} -o code.txt --write-vocabulary vocab.en vocab.de")
 
-# Apply BPE to training and validation datasets
-## HyperParameters
-
-def apply_sample_bpe(purpose: str, indices: List[int]):
-    sample_en = [all_en[i] for i in indices]
-    sample_de = [all_de[i] for i in indices]
-    with open("tmp.en", "w") as f:
-        f.write("\n".join(sample_en))
-        f.write("\n")
-    with open("tmp.de", "w") as f:
-        f.write("\n".join(sample_de))
-        f.write("\n")
-
-    os.system(f"subword-nmt apply-bpe -c {codes_file_en} < tmp.en > {purpose}.bpe.en")
-    os.system(f"subword-nmt apply-bpe -c {codes_file_de} < tmp.de > {purpose}.bpe.de")
-
-    os.remove("tmp.en")
-    os.remove("tmp.de")
-    
-
-n_train: int = 10000
-n_validate: int = 1000
-n_test: int = 1000
-
-selected_idx =  random.sample(range(len(all_en)), n_train + n_validate + n_test)
-apply_sample_bpe("train", selected_idx[:n_train])
-apply_sample_bpe("valid", selected_idx[n_train:n_train+n_validate])
-apply_sample_bpe("test", selected_idx[n_train+n_validate:])
+# Apply BPE
+for s in ["train", "test", "valid"]:
+    for l in ["de", "en"]:
+        os.system(f"subword-nmt apply-bpe -c code.txt --vocabulary vocab.{l} < tmp.{s}.{l} > {s}.{l}")
+        os.remove(f"tmp.{s}.{l}")

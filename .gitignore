@@ -2,6 +2,9 @@
 *.de
 checkpoints/
 data-bin/
+code.txt
+orig/
+iwslt14.tokenized.de-en/
 
 __pycache__
 

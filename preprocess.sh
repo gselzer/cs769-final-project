@@ -1,10 +1,9 @@
 
 # Binarize using fairseq
+rm -rf data-bin
 
-fairseq-preprocess \
-    --source-lang en \
-    --target-lang de \
-    --trainpref "train.bpe" \
-    --validpref "valid.bpe" \
-    --testpref "test.bpe" \
-    --destdir "data-bin"
+TEXT=.
+fairseq-preprocess --source-lang de --target-lang en \
+    --trainpref $TEXT/train --validpref $TEXT/valid --testpref $TEXT/test \
+    --destdir data-bin/iwslt14.tokenized.de-en \
+    --workers 20
