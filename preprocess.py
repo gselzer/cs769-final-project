@@ -50,6 +50,20 @@ os.system("perl mosesdecoder/scripts/training/clean-corpus-n.perl tmp.tok de en 
 os.system("perl mosesdecoder/scripts/tokenizer/lowercase.perl < tmp.clean.en > tmp.train.en")
 os.system("perl mosesdecoder/scripts/tokenizer/lowercase.perl < tmp.clean.de > tmp.train.de")
 
+# Sample the data
+no_samples = 10000
+with open("tmp.train.en") as f:
+    train_en = f.read().split("\n")
+with open("tmp.train.de") as f:
+    train_de = f.read().split("\n")
+samples = random.sample(range(len(train_en)), no_samples)
+train_en = [train_en[i] for i in samples]
+train_de = [train_de[i] for i in samples]
+with open("tmp.train.en", "w") as f:
+    f.write("\n".join(train_en))
+with open("tmp.train.de", "w") as f:
+    f.write("\n".join(train_de))
+
 # Grab test/validation data
 for file in ['IWSLT14.TED.tst2010', 'IWSLT14.TED.tst2011', 'IWSLT14.TED.tst2012']:
     for l in ['de', 'en']:
