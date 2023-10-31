@@ -106,28 +106,23 @@ os.system(f"subword-nmt learn-joint-bpe-and-vocab --input tmp.train.en tmp.train
 wa = utils.WordAligner()
 wa.word_alignments(source_file="tmp.train.de",
                     target_file="tmp.train.en",
-                    output_file='eflomal.en.de',
+                    output_file='eflomal.de.en',
                     model = '3')
 JDR = utils.JointDropout(debug=False)
-JDR.joint_dropout("tmp.train.de", "tmp.train.en", 'eflomal.en.de', output_dir='', 
-                    src_suffix='en',trg_suffix='de')
+JDR.joint_dropout("tmp.train.de", "tmp.train.en", 'eflomal.de.en', output_dir='', 
+                    src_suffix='de',trg_suffix='en')
 
 # Concatenate JDR output with the tmp.train.en/tmp.train.de files.
-with open('jdr.src.en', 'r') as source_file:
-    data_to_append = source_file.read()
-
-with open('tmp.train.en', 'a') as target_file:
-    target_file.write(data_to_append)
-
-with open('jdr.src.en', 'r') as source_file:
-    data_to_append = source_file.read()
-
-with open('tmp.train.en', 'a') as target_file:
-    target_file.write(data_to_append)
-with open('jdr.trg.de', 'r') as source_file:
+with open('jdr.src.de', 'r') as source_file:
     data_to_append = source_file.read()
 
 with open('tmp.train.de', 'a') as target_file:
+    target_file.write(data_to_append)
+
+with open('jdr.trg.en', 'r') as source_file:
+    data_to_append = source_file.read()
+
+with open('tmp.train.en', 'a') as target_file:
     target_file.write(data_to_append)
 
 # Apply BPE
