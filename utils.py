@@ -2,6 +2,7 @@ import os
 import subprocess
 import platform
 import random
+from string import punctuation
 
 class WordAligner:
     def __init__(self):
@@ -264,7 +265,9 @@ class JointDropout:
                         break
                 if not overlap:
                     filtered_phrases.append(phrase)
-        return set(filtered_phrases)
+        filtered_phrase_table = {entry for entry in filtered_phrases if not \
+                any(char in punctuation for char in entry[2]) and not any(char in punctuation for char in entry[3])}
+        return set(filtered_phrase_table)
 
     def _joint_dropout(self, phrase_table, source_sentence, target_sentence, target_jdr=0.3, max_drops=10):
         source_tokens = source_sentence.split()
@@ -280,6 +283,8 @@ class JointDropout:
         dropped_phrases = []
         var_index = 0
         # Select candidate phrase to be dropped
+        if len(phrases) == 0:
+            return ' '.join(source_tokens), ' '.join(target_tokens), total_tokens, dropped_tokens
         (src_start, src_end), (tgt_start, tgt_end), src_phrase, tgt_phrase = phrases.pop()
         while phrases:
             # Check if phrase violated adjacency clause (cannot have adjacent variables)
@@ -330,7 +335,6 @@ class JointDropout:
                     algn_list = [(int(s.split('-')[0]), int(s.split('-')[1])) for s in algn_list]
                     ptt = self._phrase_extraction(src_line, trg_line, algn_list)
                     ptt = self._trim_phrase_translation_table(ptt)
-                    
                     source_sentence, target_sentence, total_tokens, dropped_tokens = \
                             self._joint_dropout(ptt, src_line, trg_line, target_jdr=0.3, max_drops=10)
                     
