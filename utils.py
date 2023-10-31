@@ -61,8 +61,8 @@ class WordAligner:
 
     def __setup_other(self):
         subprocess.run(["pip", "install", "eflomal==1.0.0b0"], capture_output=True, text=True)
-        global eflomal
-        eflomal = __import__(eflomal)
+        global eflomal_module
+        eflomal_module = __import__('eflomal')
 
     def word_alignments(self, source_file, target_file, output_file, model='3'):
         if self.system_name == "Darwin":
@@ -79,22 +79,13 @@ class WordAligner:
                 "--overwrite"
             ], check=True)
         else:
-            aligner = eflomal.Aligner(model = 1)
+            aligner = eflomal_module.Aligner(model = model) 
 
             with open(source_file, 'r', encoding='utf-8') as src_data, \
                  open(target_file, 'r', encoding='utf-8') as trg_data:
                 aligner.align(src_input = src_data,
                               trg_input = trg_data,
-                              links_filename_fwd = 'links.fwd',
-                              links_filename_rev = 'links.rev')
-
-            with open(source_file, 'r', encoding='utf-8') as src_data, \
-                 open(target_file, 'r', encoding='utf-8') as trg_data, \
-                 open('links.fwd', 'r', encoding='utf-8') as fwd_links, \
-                 open('links.rev', 'r', encoding='utf-8') as rev_links, \
-                 open('priors', 'w', encoding='utf-8') as priors_f:
-                priors_tuple = eflomal.calculate_priors(src_data, trg_data, fwd_links, rev_links)
-                eflomal.write_priors(priors_f, *priors_tuple)
+                              links_filename_fwd = output_file)
 
 class JointDropout:
     def __init__(self, debug=False):
