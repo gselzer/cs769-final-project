@@ -79,7 +79,7 @@ class WordAligner:
                 "--overwrite"
             ], check=True)
         else:
-            aligner = eflomal_module.Aligner(model = model) 
+            aligner = eflomal_module.Aligner(model = int(model)) 
 
             with open(source_file, 'r', encoding='utf-8') as src_data, \
                  open(target_file, 'r', encoding='utf-8') as trg_data:
