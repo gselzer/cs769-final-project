@@ -11,6 +11,7 @@ import utils
 DATA_DIR = "data/"
 TEMP_DIR = "temp/"
 DELETE_TEMP_DATA = True
+NUM_THREADS = 1
 
 def read_and_clean(infile: str, outfile: str):
     # This pattern will search for any tags
@@ -48,8 +49,10 @@ read_and_clean("de-en/train.tags.de-en.en", TEMP_DIR+"tmp.en")
 read_and_clean("de-en/train.tags.de-en.de", TEMP_DIR+"tmp.de")
 
 # Tokenize the data
-os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads 8 -l en < {TEMP_DIR}tmp.en > {TEMP_DIR}tmp.tok.en")
-os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads 8 -l de < {TEMP_DIR}tmp.de > {TEMP_DIR}tmp.tok.de")
+os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads {NUM_THREADS} -l en \
+            < {TEMP_DIR}tmp.en > {TEMP_DIR}tmp.tok.en")
+os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads {NUM_THREADS} -l de \
+            < {TEMP_DIR}tmp.de > {TEMP_DIR}tmp.tok.de")
 
 # Clean the data
 os.system(f"perl mosesdecoder/scripts/training/clean-corpus-n.perl {TEMP_DIR}tmp.tok de en {TEMP_DIR}tmp.clean 1 175")
@@ -102,7 +105,7 @@ for file in ['IWSLT14.TED.dev2010', 'IWSLT14.TEDX.dev2012']:
 # Tokenize and clean test/validation data
 for s in ["test", "valid"]:
     for l in ["de", "en"]:
-        os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads 8 -l {l} \
+        os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads {NUM_THREADS} -l {l} \
                     < {TEMP_DIR}tmp.{s}.{l} > {TEMP_DIR}tmp.tok.{l}")
         os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.tok.{l} > \
                     {TEMP_DIR}tmp.{s}.{l}")
