@@ -5,6 +5,7 @@ from typing import List
 from mosestokenizer import MosesPunctuationNormalizer, MosesTokenizer
 from subword_nmt import learn_bpe, apply_bpe
 from sample import read_source_and_target
+import utils
 
 def read_and_clean(infile: str, outfile: str):
     # This pattern will search for any tags
@@ -97,15 +98,41 @@ for s in ["test", "valid"]:
         os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads 8 -l {l} < tmp.{s}.{l} > tmp.tok.{l}")
         os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < tmp.tok.{l} > tmp.{s}.{l}")
 
-
-# TODO Apply Joint Dropout
-
 # Learn BPE
 num_bpe_tokens: int = 10000
 os.system(f"subword-nmt learn-joint-bpe-and-vocab --input tmp.train.en tmp.train.de -s {num_bpe_tokens} -o code.txt --write-vocabulary vocab.en vocab.de")
 
+# Joint Dropout
+wa = utils.WordAligner()
+wa.word_alignments(source_file="tmp.train.de",
+                    target_file="tmp.train.en",
+                    output_file='eflomal.en.de',
+                    model = '3')
+JDR = utils.JointDropout(debug=False)
+JDR.joint_dropout("tmp.train.de", "tmp.train.en", 'eflomal.en.de', output_dir='', 
+                    src_suffix='en',trg_suffix='de')
+
+# Concatenate JDR output with the tmp.train.en/tmp.train.de files.
+with open('jdr.src.en', 'r') as source_file:
+    data_to_append = source_file.read()
+
+with open('tmp.train.en', 'a') as target_file:
+    target_file.write(data_to_append)
+
+with open('jdr.src.en', 'r') as source_file:
+    data_to_append = source_file.read()
+
+with open('tmp.train.en', 'a') as target_file:
+    target_file.write(data_to_append)
+with open('jdr.trg.de', 'r') as source_file:
+    data_to_append = source_file.read()
+
+with open('tmp.train.de', 'a') as target_file:
+    target_file.write(data_to_append)
+
 # Apply BPE
 for s in ["train", "test", "valid"]:
     for l in ["de", "en"]:
-        os.system(f"subword-nmt apply-bpe -c code.txt --vocabulary vocab.{l} < tmp.{s}.{l} > {s}.{l}")
+        os.system(f"subword-nmt apply-bpe -c code.txt --vocabulary vocab.{l} < tmp.{s}.{l} > {s}.{l} \
+                     --glossaries '<S_\d+>' '<T_\d+>'")
         os.remove(f"tmp.{s}.{l}")
