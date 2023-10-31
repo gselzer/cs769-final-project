@@ -7,6 +7,11 @@ from subword_nmt import learn_bpe, apply_bpe
 from sample import read_source_and_target
 import utils
 
+# Configuration Constants
+DATA_DIR = "data/"
+TEMP_DIR = "temp/"
+DELETE_TEMP_DATA = True
+
 def read_and_clean(infile: str, outfile: str):
     # This pattern will search for any tags
     delete_tags = ['<url>', '<talkid>', '<keywords>']
@@ -29,40 +34,42 @@ def read_and_clean(infile: str, outfile: str):
     with open(outfile, "w") as f:
         f.write("\n".join(cleaned))
 
-def remove_if_exists(files: List[str]):
-    for file in files:
-        if os.path.exists(file):
-            os.remove(file)
-remove_if_exists(["train.de", "train.en", "valid.de", "valid.en", "test.de", "test.en", "tmp.valid.en", "tmp.valid.de", "tmp.test.de", "tmp.test.en"])
+# Delete data from old runs in "data" and "temp" directories
+for dir_path in [TEMP_DIR, DATA_DIR]:
+    if os.path.exists(dir_path) and os.path.isdir(dir_path):
+        os.system(f"rm -rf {dir_path}")
 
+# Make temp and data directories
+os.makedirs('data', exist_ok=True)
+os.makedirs('temp', exist_ok=True)
 
 # Sample source and target
-read_and_clean("de-en/train.tags.de-en.en", "tmp.en")
-read_and_clean("de-en/train.tags.de-en.de", "tmp.de")
+read_and_clean("de-en/train.tags.de-en.en", TEMP_DIR+"tmp.en")
+read_and_clean("de-en/train.tags.de-en.de", TEMP_DIR+"tmp.de")
 
 # Tokenize the data
-os.system("perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads 8 -l en < tmp.en > tmp.tok.en")
-os.system("perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads 8 -l de < tmp.de > tmp.tok.de")
+os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads 8 -l en < {TEMP_DIR}tmp.en > {TEMP_DIR}tmp.tok.en")
+os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads 8 -l de < {TEMP_DIR}tmp.de > {TEMP_DIR}tmp.tok.de")
 
 # Clean the data
-os.system("perl mosesdecoder/scripts/training/clean-corpus-n.perl tmp.tok de en tmp.clean 1 175")
+os.system(f"perl mosesdecoder/scripts/training/clean-corpus-n.perl {TEMP_DIR}tmp.tok de en {TEMP_DIR}tmp.clean 1 175")
 
 # Truecase (lowercase) the data
-os.system("perl mosesdecoder/scripts/tokenizer/lowercase.perl < tmp.clean.en > tmp.train.en")
-os.system("perl mosesdecoder/scripts/tokenizer/lowercase.perl < tmp.clean.de > tmp.train.de")
+os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.en > {TEMP_DIR}tmp.train.en")
+os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.de > {TEMP_DIR}tmp.train.de")
 
 # Sample the data
 no_samples = 10000
-with open("tmp.train.en") as f:
+with open(TEMP_DIR+"tmp.train.en") as f:
     train_en = f.read().split("\n")
-with open("tmp.train.de") as f:
+with open(TEMP_DIR+"tmp.train.de") as f:
     train_de = f.read().split("\n")
 samples = random.sample(range(len(train_en)), no_samples)
 train_en = [train_en[i] for i in samples]
 train_de = [train_de[i] for i in samples]
-with open("tmp.train.en", "w") as f:
+with open(TEMP_DIR+"tmp.train.en", "w") as f:
     f.write("\n".join(train_en))
-with open("tmp.train.de", "w") as f:
+with open(TEMP_DIR+"tmp.train.de", "w") as f:
     f.write("\n".join(train_de))
 
 # Grab test/validation data
@@ -76,7 +83,7 @@ for file in ['IWSLT14.TED.tst2010', 'IWSLT14.TED.tst2011', 'IWSLT14.TED.tst2012'
             line = re.sub("<seg id=\"\d*\">", "", line)
             line = re.sub("<\/seg>", "", line)
             cleaned.append(line)
-        with open(f"tmp.test.{l}", "a") as f:
+        with open(f"{TEMP_DIR}tmp.test.{l}", "a") as f:
             f.write("\n".join(cleaned))
 
 for file in ['IWSLT14.TED.dev2010', 'IWSLT14.TEDX.dev2012']:
@@ -89,45 +96,51 @@ for file in ['IWSLT14.TED.dev2010', 'IWSLT14.TEDX.dev2012']:
             line = re.sub("<seg id=\"\d*\">", "", line)
             line = re.sub("<\/seg>", "", line)
             cleaned.append(line)
-        with open(f"tmp.valid.{l}", "a") as f:
+        with open(f"{TEMP_DIR}tmp.valid.{l}", "a") as f:
             f.write("\n".join(cleaned))
 
 # Tokenize and clean test/validation data
 for s in ["test", "valid"]:
     for l in ["de", "en"]:
-        os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads 8 -l {l} < tmp.{s}.{l} > tmp.tok.{l}")
-        os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < tmp.tok.{l} > tmp.{s}.{l}")
+        os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads 8 -l {l} \
+                    < {TEMP_DIR}tmp.{s}.{l} > {TEMP_DIR}tmp.tok.{l}")
+        os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.tok.{l} > \
+                    {TEMP_DIR}tmp.{s}.{l}")
 
 # Learn BPE
 num_bpe_tokens: int = 10000
-os.system(f"subword-nmt learn-joint-bpe-and-vocab --input tmp.train.en tmp.train.de -s {num_bpe_tokens} -o code.txt --write-vocabulary vocab.en vocab.de")
+os.system(f"subword-nmt learn-joint-bpe-and-vocab --input {TEMP_DIR}tmp.train.en {TEMP_DIR}tmp.train.de \
+            -s {num_bpe_tokens} -o {TEMP_DIR}code.txt --write-vocabulary {TEMP_DIR}vocab.en {TEMP_DIR}vocab.de")
 
 # Joint Dropout
 wa = utils.WordAligner()
-wa.word_alignments(source_file="tmp.train.de",
-                    target_file="tmp.train.en",
-                    output_file='eflomal.de.en',
+wa.word_alignments(source_file=f"{TEMP_DIR}tmp.train.de",
+                    target_file=f"{TEMP_DIR}tmp.train.en",
+                    output_file=f'{TEMP_DIR}eflomal.de.en',
                     model = '3')
 JDR = utils.JointDropout(debug=False)
-JDR.joint_dropout("tmp.train.de", "tmp.train.en", 'eflomal.de.en', output_dir='', 
-                    src_suffix='de',trg_suffix='en')
+JDR.joint_dropout(f"{TEMP_DIR}tmp.train.de", f"{TEMP_DIR}tmp.train.en", f'{TEMP_DIR}eflomal.de.en',
+                  output_dir=f'{TEMP_DIR}', src_suffix='de',trg_suffix='en')
 
 # Concatenate JDR output with the tmp.train.en/tmp.train.de files.
-with open('jdr.src.de', 'r') as source_file:
+with open(f'{TEMP_DIR}jdr.src.de', 'r') as source_file:
     data_to_append = source_file.read()
 
-with open('tmp.train.de', 'a') as target_file:
+with open(f'{TEMP_DIR}tmp.train.de', 'a') as target_file:
     target_file.write(data_to_append)
 
-with open('jdr.trg.en', 'r') as source_file:
+with open(f'{TEMP_DIR}jdr.trg.en', 'r') as source_file:
     data_to_append = source_file.read()
 
-with open('tmp.train.en', 'a') as target_file:
+with open(f'{TEMP_DIR}tmp.train.en', 'a') as target_file:
     target_file.write(data_to_append)
 
 # Apply BPE
 for s in ["train", "test", "valid"]:
     for l in ["de", "en"]:
-        os.system(f"subword-nmt apply-bpe -c code.txt --vocabulary vocab.{l} < tmp.{s}.{l} > {s}.{l} \
-                     --glossaries '<S_\d+>' '<T_\d+>'")
-        os.remove(f"tmp.{s}.{l}")
+        os.system(f"subword-nmt apply-bpe -c {TEMP_DIR}code.txt --vocabulary {TEMP_DIR}vocab.{l} < \
+                    {TEMP_DIR}tmp.{s}.{l} > {DATA_DIR}{s}.{l} --glossaries '<S_\d+>' '<T_\d+>'")
+
+# Delete Temp Files
+if DELETE_TEMP_DATA:
+    os.system("rm -rf temp")
