@@ -13,5 +13,5 @@ conda activate cs769
 ```
 Run the training pipeline:
 ```
-python preprocess.py && ./preprocess.sh && ./train.sh
+python preprocess.py && ./binarize.sh && ./train.sh
 ```
