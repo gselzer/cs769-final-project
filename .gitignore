@@ -1,11 +1,13 @@
 *.en
 *.de
 checkpoints/
+eval-checkpoints/
 data-bin/
 code.txt
 orig/
 iwslt14.tokenized.de-en/
 
+.vscode/
 __pycache__
 
 # macOS
