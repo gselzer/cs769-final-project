@@ -1,21 +1,11 @@
-# Resources
+# CS769 Final Project - Gabriel Selzer, Luke Neuendorf, Zach Potter
 
-## Joint Dropout ([paper](https://arxiv.org/pdf/2307.12835v1.pdf))
+Many **Low-resource** machine translation problems cannot afford the hardware necessary for solutions involving complex language models. In such cases, improving accuracy must be accomplished using other techniques. Our final project seeks to understand how well state-of-the-art techniques for improving accuracy in low-resource situations fare with a *small* language model, across varying degrees of language similarity and varying amounts of technique composition.
 
-Note [this slightly older paper](https://aclanthology.org/2020.coling-main.304.pdf) from the same authors - their preprocessing pipeline seems similar ([code](https://github.com/aliaraabi/OptTransformer))
+## Proposal Information
+For our proposal, we implement Joint Dropout ([paper](https://arxiv.org/pdf/2307.12835v1.pdf))
 
-[Eflomal](https://github.com/robertostling/eflomal) - word alignment tool for generating symmetrized word alignments
-
-[Moses](https://github.com/moses-smt/mosesdecoder), used for "punctuation normalization, tokenization, data cleaning, and true-casing" (but [this site](http://www.statmt.org/moses/))
-
-[BPE Segmentation](https://github.com/rsennrich/subword-nmt)
-
-[English-German TED training data](https://wit3.fbk.eu/2014-01)
-
-[CoreNLP](https://stanfordnlp.github.io/CoreNLP/) ([paper](https://stanfordnlp.github.io/CoreNLP/)), used to create constituency trees for the training sentences.
-
-
-# Setup
+### Setup
 Build and activate the conda environment:
 ```
 conda env create -f environment.yml
