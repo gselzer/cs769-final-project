@@ -5,6 +5,7 @@ eval-checkpoints/
 data-bin/
 code.txt
 orig/
+results/
 iwslt14.tokenized.de-en/
 
 .vscode/

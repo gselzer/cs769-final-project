@@ -404,3 +404,7 @@ def develop_ne_en_data(tmp_dir: str):
     # Training data
     os.system(f"cp ne-en/wikipedia.test.ne-en.en {tmp_dir}tmp.test.en")
     os.system(f"cp ne-en/wikipedia.test.ne-en.ne {tmp_dir}tmp.test.ne")
+
+def develop_data(tmp_dir: str, src_lang: str, tgt_lang: str):
+    if src_lang == "de" and tgt_lang == "en":
+        develop_de_en_data(tmp_dir)
