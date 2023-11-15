@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import platform
 import random
@@ -339,3 +340,67 @@ class JointDropout:
 
                 if self.debug: print(f"JDR: {tokens_dropped / tokens_total}")
 
+def _read_and_clean(infile: str, outfile: str):
+    # This pattern will search for any tags
+    delete_tags = ['<url>', '<talkid>', '<keywords>']
+    clean_tags = ['<title>', "</title>", "<description>", "</description>"]
+
+    # Read in the files
+    with open(infile) as f:
+        text_source = f.read().split('\n')
+    
+    cleaned = []
+    for line in text_source:
+        if any([tag in line for tag in delete_tags]):
+            continue
+        for tag in clean_tags:
+            if tag in line:
+                line = line.replace(tag, "")
+        cleaned.append(line)
+
+    # Write out the files
+    with open(outfile, "w") as f:
+        f.write("\n".join(cleaned))
+
+def develop_de_en_data(tmp_dir: str):
+    # Sample source and target
+    _read_and_clean(f"de-en/train.tags.de-en.en", tmp_dir+f"tmp.en")
+    _read_and_clean(f"de-en/train.tags.de-en.de", tmp_dir+f"tmp.de")
+
+    # Grab test/validation data
+    for file in ['IWSLT14.TED.tst2010', 'IWSLT14.TED.tst2011', 'IWSLT14.TED.tst2012']:
+        for l in ['de', 'en']:
+            with open(f"de-en/{file}.de-en.{l}.xml") as f:
+                lines = f.read().split("\n")
+            cleaned = []
+            for line in lines:
+                if not '<seg id' in line: continue
+                line = re.sub("<seg id=\"\d*\">", "", line)
+                line = re.sub("<\/seg>", "", line)
+                cleaned.append(line)
+            with open(f"{tmp_dir}tmp.test.{l}", "a") as f:
+                f.write("\n".join(cleaned))
+
+    for file in ['IWSLT14.TED.dev2010', 'IWSLT14.TEDX.dev2012']:
+        for l in ['de', 'en']:
+            with open(f"de-en/{file}.de-en.{l}.xml") as f:
+                lines = f.read().split("\n")
+            cleaned = []
+            for line in lines:
+                if not '<seg id' in line: continue
+                line = re.sub("<seg id=\"\d*\">", "", line)
+                line = re.sub("<\/seg>", "", line)
+                cleaned.append(line)
+            with open(f"{tmp_dir}tmp.valid.{l}", "a") as f:
+                f.write("\n".join(cleaned))
+
+def develop_ne_en_data(tmp_dir: str):
+    # Training data
+    os.system(f"cp ne-en/wikipedia.dev.ne-en.en {tmp_dir}tmp.en")
+    os.system(f"cp ne-en/wikipedia.dev.ne-en.ne {tmp_dir}tmp.ne")
+    # Training data
+    os.system(f"cp ne-en/wikipedia.devtest.ne-en.en {tmp_dir}tmp.valid.en")
+    os.system(f"cp ne-en/wikipedia.devtest.ne-en.ne {tmp_dir}tmp.valid.ne")
+    # Training data
+    os.system(f"cp ne-en/wikipedia.test.ne-en.en {tmp_dir}tmp.test.en")
+    os.system(f"cp ne-en/wikipedia.test.ne-en.ne {tmp_dir}tmp.test.ne")
