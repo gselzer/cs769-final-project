@@ -5,10 +5,12 @@ from techniques.interleaving.linguistic import tag
 from techniques.mRASP.mrasp import mRASP
 import utils
 
+from mBART import mbart
+
 # Configuration Constants
 DATA_DIR = "data/"
 TEMP_DIR = "temp/"
-SRC_LANG = "ne"
+SRC_LANG = "de"
 TGT_LANG = "en"
 DELETE_TEMP_DATA = True
 NUM_THREADS = 1
@@ -38,6 +40,10 @@ utils.preprocess_data(TEMP_DIR, SRC_LANG, TGT_LANG)
 #     # Only add POS for source data
 #     for l in [SRC_LANG]:
 #         tag(f"{TEMP_DIR}tmp.{s}.{l}", l)
+mbart(
+    [f"{TEMP_DIR}tmp.train.en", f"{TEMP_DIR}tmp.train.de"], 
+    f"{TEMP_DIR}pretrain")
+
 
 # Learn BPE
 num_bpe_tokens: int = 10000
@@ -90,6 +96,8 @@ glossary = [
     "SCONJ",
     "SYM",
     "VERB",
+    # MBART
+    "<mask>",
 ]
 glossary_str = " ".join([f"'{d}'" for d in glossary])
 for s in ["train", "test", "valid"]:

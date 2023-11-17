@@ -4,7 +4,7 @@ rm -rf data-bin
 
 # Step 1: Generate joined dictionary on all training data
 TEXT=data
-SRC=ne
+SRC=de
 TGT=en
 fairseq-preprocess --source-lang $SRC --target-lang $TGT \
     --trainpref $TEXT/train --validpref $TEXT/valid --testpref $TEXT/test \
