@@ -31,6 +31,29 @@ def read_and_clean(infile: str, outfile: str):
     with open(outfile, "w") as f:
         f.write("\n".join(cleaned))
 
+def noising(sentence, p=0.35):
+    words = sentence.split()
+    
+    # Randomly replace some words with [MASK]
+    for i in range(len(words)):
+        if random.random() < p:
+            words[i] = "[MASK]"
+    
+    # Randomly shuffle the order of words
+    random.shuffle(words)
+    
+    return " ".join(words)
+
+def apply_noising_to_file(infile, outfile, p=0.35):
+    with open(infile, "r") as f:
+        sentences = f.read().split("\n")
+    
+    noised_sentences = [noising(sentence, p) for sentence in sentences]
+    
+    with open(outfile, "w") as f:
+        f.write("\n".join(noised_sentences))
+
+
 # Delete data from old runs in "data" and "temp" directories
 for dir_path in [TEMP_DIR, DATA_DIR]:
     if os.path.exists(dir_path) and os.path.isdir(dir_path):
@@ -53,9 +76,13 @@ os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads {NUM_THR
 # Clean the data
 os.system(f"perl mosesdecoder/scripts/training/clean-corpus-n.perl {TEMP_DIR}tmp.tok de en {TEMP_DIR}tmp.clean 1 175")
 
+apply_noising_to_file(f"{TEMP_DIR}tmp.clean.en", f"{TEMP_DIR}tmp.train.en")
+apply_noising_to_file(f"{TEMP_DIR}tmp.clean.de", f"{TEMP_DIR}tmp.train.de")
+
+
 # Truecase (lowercase) the data
-os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.en > {TEMP_DIR}tmp.train.en")
-os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.de > {TEMP_DIR}tmp.train.de")
+# os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.en > {TEMP_DIR}tmp.train.en")
+# os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.de > {TEMP_DIR}tmp.train.de")
 
 # Sample the data
 no_samples = 10000
