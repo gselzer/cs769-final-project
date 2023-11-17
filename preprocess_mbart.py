@@ -76,8 +76,8 @@ os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads {NUM_THR
 # Clean the data
 os.system(f"perl mosesdecoder/scripts/training/clean-corpus-n.perl {TEMP_DIR}tmp.tok de en {TEMP_DIR}tmp.clean 1 175")
 
-apply_noising_to_file(f"{TEMP_DIR}train.en", f"{TEMP_DIR}tmp.train.en")
-apply_noising_to_file(f"{TEMP_DIR}train.de", f"{TEMP_DIR}tmp.train.de")
+apply_noising_to_file(f"{TEMP_DIR}tmp.clean.en", f"{TEMP_DIR}tmp.train.en")
+apply_noising_to_file(f"{TEMP_DIR}tmp.clean.de", f"{TEMP_DIR}tmp.train.de")
 
 
 # Truecase (lowercase) the data
