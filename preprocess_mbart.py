@@ -31,7 +31,7 @@ def read_and_clean(infile: str, outfile: str):
     with open(outfile, "w") as f:
         f.write("\n".join(cleaned))
 
-def noising(sentence, p=0.15):
+def noising(sentence, p=0.35):
     words = sentence.split()
     
     # Randomly replace some words with [MASK]
@@ -44,7 +44,7 @@ def noising(sentence, p=0.15):
     
     return " ".join(words)
 
-def apply_noising_to_file(infile, outfile, p=0.15):
+def apply_noising_to_file(infile, outfile, p=0.35):
     with open(infile, "r") as f:
         sentences = f.read().split("\n")
     
