@@ -1,6 +1,7 @@
 import os
 import re
 import random
+from techniques.interleaving.linguistic import tag
 import utils
 from techniques.mRASP.mrasp import mRASP
 
@@ -76,24 +77,29 @@ for s in ["test", "valid"]:
 
 # Sample the data
 no_samples = 10000
-with open(TEMP_DIR+"tmp.train.en") as f:
-    train_en = f.read().split("\n")
-with open(TEMP_DIR+"tmp.train.de") as f:
-    train_de = f.read().split("\n")
-samples = random.sample(range(len(train_en)), no_samples)
-train_en = [train_en[i] for i in samples]
-train_de = [train_de[i] for i in samples]
-with open(TEMP_DIR+"tmp.train.en", "w") as f:
-    f.write("\n".join(train_en))
-with open(TEMP_DIR+"tmp.train.de", "w") as f:
-    f.write("\n".join(train_de))
+with open(f"{TEMP_DIR}tmp.train.{TGT_LANG}") as f:
+    train_tgt = f.read().split("\n")
+with open(f"{TEMP_DIR}tmp.train.{SRC_LANG}") as f:
+    train_src = f.read().split("\n")
+samples = random.sample(range(len(train_tgt)), no_samples)
+train_tgt = [train_tgt[i] for i in samples]
+train_src = [train_src[i] for i in samples]
+with open(f"{TEMP_DIR}tmp.train.{SRC_LANG}", "w") as f:
+    f.write("\n".join(train_src))
+with open(f"{TEMP_DIR}tmp.train.{TGT_LANG}", "w") as f:
+    f.write("\n".join(train_tgt))
 
-# Create RAS pretraining data
-mRASP(
-    [f"{TEMP_DIR}tmp.train.{SRC_LANG}", f"{TEMP_DIR}tmp.valid.{SRC_LANG}", f"{TEMP_DIR}tmp.test.{SRC_LANG}"],
-    [f"{TEMP_DIR}tmp.train.{TGT_LANG}", f"{TEMP_DIR}tmp.valid.{TGT_LANG}", f"{TEMP_DIR}tmp.test.{TGT_LANG}"],
-    f"{TEMP_DIR}pretrain"
-)
+# # Create RAS pretraining data
+# mRASP(
+#     [f"{TEMP_DIR}tmp.train.{SRC_LANG}", f"{TEMP_DIR}tmp.valid.{SRC_LANG}", f"{TEMP_DIR}tmp.test.{SRC_LANG}"],
+#     [f"{TEMP_DIR}tmp.train.{TGT_LANG}", f"{TEMP_DIR}tmp.valid.{TGT_LANG}", f"{TEMP_DIR}tmp.test.{TGT_LANG}"],
+#     f"{TEMP_DIR}pretrain"
+# )
+# POS tag data
+for s in ["train", "test", "valid"]:
+    # Only add POS for source data
+    for l in [SRC_LANG]:
+        tag(f"{TEMP_DIR}tmp.{s}.{l}", l)
 
 # Learn BPE
 num_bpe_tokens: int = 10000
@@ -125,17 +131,40 @@ os.system(f"subword-nmt learn-joint-bpe-and-vocab --input {TEMP_DIR}tmp.train.{T
 #     target_file.write(data_to_append)
 
 # Apply BPE
+glossary = [
+    # Joint Dropout
+    "<S_\d+>",
+    "<T_\d+>",
+    # Penn Treebank POS tags
+    "ADJ",
+    "ADP",
+    "ADV",
+    "AUX",
+    "CCONJ",
+    "DET",
+    "INTJ",
+    "NOUN",
+    "NUM",
+    "PART",
+    "PRON",
+    "PROPN",
+    "PUNCT",
+    "SCONJ",
+    "SYM",
+    "VERB",
+]
+glossary_str = " ".join([f"'{d}'" for d in glossary])
 for s in ["train", "test", "valid"]:
     for l in [SRC_LANG, TGT_LANG]:
         os.system(f"subword-nmt apply-bpe -c {TEMP_DIR}code.txt --vocabulary {TEMP_DIR}vocab.{l} < \
-                    {TEMP_DIR}tmp.{s}.{l} > {DATA_DIR}{s}.{l} --glossaries '<S_\d+>' '<T_\d+>'")
+                    {TEMP_DIR}tmp.{s}.{l} > {DATA_DIR}{s}.{l} --glossaries {glossary_str}")
 
 # Apply BPE to pretrained data
 os.makedirs(f"{DATA_DIR}pretrain")
 for s in ["train", "test", "valid"]:
     for l in [SRC_LANG, TGT_LANG]:
         os.system(f"subword-nmt apply-bpe -c {TEMP_DIR}code.txt --vocabulary {TEMP_DIR}vocab.en < \
-                    {TEMP_DIR}pretrain/{s}.{l} > {DATA_DIR}pretrain/{s}.{l} --glossaries '<S_\d+>' '<T_\d+>'")
+                    {TEMP_DIR}pretrain/{s}.{l} > {DATA_DIR}pretrain/{s}.{l} --glossaries {glossary_str}")
 
 os.system(f"cp {TEMP_DIR}code.txt {DATA_DIR}code.txt")
 
