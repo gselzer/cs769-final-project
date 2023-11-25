@@ -56,16 +56,16 @@ def noising(sentence: str, p, lambda_value):
     mask_length = min(wl, poisson(lam=lambda_value)) #int(wl * p)
 
     if mask_length == wl:
-        mask_start = 0
-    else:
-        mask_start = random.choice(range(wl - mask_length))
+        return ""
+    
+    mask_start = random.choice(range(wl - mask_length))
     # mask_end = mask_start + mask_length
     
     # words[mask_start:mask_end] = ["[MASK]"] * mask_length
 
-    for i in range(mask_length):
-        words[mask_start+i] = "<MASK>"
-
+    # for i in range(mask_length):
+    #     words[mask_start+i] = "<MASK>"
+    del words[mask_start:mask_start+mask_length]
     # # Randomly shuffle the order of words
     # random.shuffle(words)
     
