@@ -64,7 +64,7 @@ def noising(sentence: str, p, lambda_value):
     # words[mask_start:mask_end] = ["[MASK]"] * mask_length
 
     for i in range(mask_length):
-        words[mask_start+i] = "[MASK]"
+        words[mask_start+i] = "<MASK>"
 
     # # Randomly shuffle the order of words
     # random.shuffle(words)
