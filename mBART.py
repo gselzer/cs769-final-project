@@ -17,7 +17,7 @@ def mbart(src_files: List[str], tgt_files: List[str], lambda_value: float = 3.5)
             sentences = f.read().split("\n")
         
         noised_sentences = [noising(sentence, lambda_value) for sentence in sentences]
-        random.shuffle(noised_sentences)
+        # random.shuffle(noised_sentences)
 
         # print(noised_sentences)
 
