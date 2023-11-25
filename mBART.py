@@ -23,7 +23,7 @@ def mbart(src_files: List[str], tgt_files: List[str], p: float = 0.35, lambda_va
             f.write("\n".join(noised_sentences))
 
 
-def noising(sentence, p, lambda_value):
+def noising(sentence: str, p, lambda_value):
     """
     Apply mBART-style noising to a sentence.
     
@@ -48,6 +48,10 @@ def noising(sentence, p, lambda_value):
 
 
     wl = len(words)
+
+    if wl == 0:
+        return ""
+
     mask_length = int(wl * p)
     mask_start = random.choice(range(wl - mask_length))
     # mask_end = mask_start + mask_length
