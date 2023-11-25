@@ -1,4 +1,4 @@
-import random
+from numpy import random
 from typing import List
 
 def mbart(src_files: List[str], tgt_files: List[str], p: float = 0.35, lambda_value: float = 3.5):
