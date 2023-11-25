@@ -19,7 +19,7 @@ def mbart(src_files: List[str], tgt_files: List[str], lambda_value: float = 3.5)
         noised_sentences = [noising(sentence, lambda_value) for sentence in sentences]
         random.shuffle(noised_sentences)
 
-        print(noised_sentences)
+        # print(noised_sentences)
 
         with open(tgt_files[i], "w") as f:
             f.write("\n".join(noised_sentences))
@@ -40,14 +40,17 @@ def noising(sentence: str, lambda_value):
 
     wl = len(words)
 
-    mask_length = min(wl, poisson(lam=lambda_value)) #int(wl * p)
-
-    if mask_length == wl == 0:
+    if wl == 0:
         return ""
     
-    mask_start = random.choice(range(wl - mask_length))
+    mask_length = min(wl, poisson(lam=lambda_value)) #int(wl * p)
 
-    words[mask_start:mask_start+mask_length] = "_" * mask_length
+    if mask_length == wl:
+        mask_start = 0
+    else:
+        mask_start = random.choice(range(wl - mask_length))
+
+    words[mask_start:mask_start+mask_length] = "" * mask_length
     # del words[mask_start:mask_start+mask_length]
    
     return " ".join(words)
