@@ -10,5 +10,6 @@ dependencies:
   - pip
   - pip:
     - subword-nmt
+    - indic-nlp-library
     - torchvision
     - torchaudio

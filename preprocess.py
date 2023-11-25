@@ -2,15 +2,13 @@ import os
 import re
 import random
 from techniques.interleaving.linguistic import tag
+from techniques.mRASP.mrasp import mRASP
 import utils
-from techniques.mRASP.mrasp import mRASP
-
-from techniques.mRASP.mrasp import mRASP
 
 # Configuration Constants
 DATA_DIR = "data/"
 TEMP_DIR = "temp/"
-SRC_LANG = "de"
+SRC_LANG = "ne"
 TGT_LANG = "en"
 DELETE_TEMP_DATA = True
 NUM_THREADS = 1
@@ -27,67 +25,7 @@ os.makedirs('temp', exist_ok=True)
 
 utils.develop_data(TEMP_DIR, SRC_LANG, TGT_LANG)
 
-# Tokenize the data
-os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads {NUM_THREADS} -l {TGT_LANG} \
-            < {TEMP_DIR}tmp.{TGT_LANG} > {TEMP_DIR}tmp.tok.{TGT_LANG}")
-os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads {NUM_THREADS} -l {SRC_LANG} \
-            < {TEMP_DIR}tmp.{SRC_LANG} > {TEMP_DIR}tmp.tok.{SRC_LANG}")
-
-# Clean the data
-os.system(f"perl mosesdecoder/scripts/training/clean-corpus-n.perl {TEMP_DIR}tmp.tok {SRC_LANG} {TGT_LANG} {TEMP_DIR}tmp.clean 1 175")
-
-# Truecase (lowercase) the data
-os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.{SRC_LANG} > {TEMP_DIR}tmp.train.{SRC_LANG}")
-os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.{TGT_LANG} > {TEMP_DIR}tmp.train.{TGT_LANG}")
-
-# Grab test/validation data
-for file in ['IWSLT14.TED.tst2010', 'IWSLT14.TED.tst2011', 'IWSLT14.TED.tst2012']:
-    for l in ['de', 'en']:
-        with open(f"de-en/{file}.de-en.{l}.xml") as f:
-            lines = f.read().split("\n")
-        cleaned = []
-        for line in lines:
-            if not '<seg id' in line: continue
-            line = re.sub("<seg id=\"\d*\">", "", line)
-            line = re.sub("<\/seg>", "", line)
-            cleaned.append(line)
-        with open(f"{TEMP_DIR}tmp.test.{l}", "a") as f:
-            f.write("\n".join(cleaned))
-
-for file in ['IWSLT14.TED.dev2010', 'IWSLT14.TEDX.dev2012']:
-    for l in ['de', 'en']:
-        with open(f"de-en/{file}.de-en.{l}.xml") as f:
-            lines = f.read().split("\n")
-        cleaned = []
-        for line in lines:
-            if not '<seg id' in line: continue
-            line = re.sub("<seg id=\"\d*\">", "", line)
-            line = re.sub("<\/seg>", "", line)
-            cleaned.append(line)
-        with open(f"{TEMP_DIR}tmp.valid.{l}", "a") as f:
-            f.write("\n".join(cleaned))
-
-# Tokenize and clean test/validation data
-for s in ["test", "valid"]:
-    for l in [SRC_LANG, TGT_LANG]:
-        os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads {NUM_THREADS} -l {l} \
-                    < {TEMP_DIR}tmp.{s}.{l} > {TEMP_DIR}tmp.tok.{l}")
-        os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.tok.{l} > \
-                    {TEMP_DIR}tmp.{s}.{l}")
-
-# Sample the data
-no_samples = 10000
-with open(f"{TEMP_DIR}tmp.train.{TGT_LANG}") as f:
-    train_tgt = f.read().split("\n")
-with open(f"{TEMP_DIR}tmp.train.{SRC_LANG}") as f:
-    train_src = f.read().split("\n")
-samples = random.sample(range(len(train_tgt)), no_samples)
-train_tgt = [train_tgt[i] for i in samples]
-train_src = [train_src[i] for i in samples]
-with open(f"{TEMP_DIR}tmp.train.{SRC_LANG}", "w") as f:
-    f.write("\n".join(train_src))
-with open(f"{TEMP_DIR}tmp.train.{TGT_LANG}", "w") as f:
-    f.write("\n".join(train_tgt))
+utils.preprocess_data(TEMP_DIR, SRC_LANG, TGT_LANG)
 
 # # Create RAS pretraining data
 # mRASP(
@@ -96,10 +34,10 @@ with open(f"{TEMP_DIR}tmp.train.{TGT_LANG}", "w") as f:
 #     f"{TEMP_DIR}pretrain"
 # )
 # POS tag data
-for s in ["train", "test", "valid"]:
-    # Only add POS for source data
-    for l in [SRC_LANG]:
-        tag(f"{TEMP_DIR}tmp.{s}.{l}", l)
+# for s in ["train", "test", "valid"]:
+#     # Only add POS for source data
+#     for l in [SRC_LANG]:
+#         tag(f"{TEMP_DIR}tmp.{s}.{l}", l)
 
 # Learn BPE
 num_bpe_tokens: int = 10000

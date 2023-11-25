@@ -3,6 +3,7 @@ import re
 import subprocess
 import platform
 import random
+from indicnlp.tokenize import indic_tokenize
 from string import punctuation
 
 class WordAligner:
@@ -396,15 +397,85 @@ def develop_de_en_data(tmp_dir: str):
 
 def develop_ne_en_data(tmp_dir: str):
     # Training data
-    os.system(f"cp ne-en/wikipedia.dev.ne-en.en {tmp_dir}tmp.en")
-    os.system(f"cp ne-en/wikipedia.dev.ne-en.ne {tmp_dir}tmp.ne")
-    # Training data
-    os.system(f"cp ne-en/wikipedia.devtest.ne-en.en {tmp_dir}tmp.valid.en")
-    os.system(f"cp ne-en/wikipedia.devtest.ne-en.ne {tmp_dir}tmp.valid.ne")
-    # Training data
-    os.system(f"cp ne-en/wikipedia.test.ne-en.en {tmp_dir}tmp.test.en")
-    os.system(f"cp ne-en/wikipedia.test.ne-en.ne {tmp_dir}tmp.test.ne")
+    train_sets = [
+        'clean-data/all-clean-ne/bible.en-ne',
+        'clean-data/all-clean-ne/bible_dup.en-ne',
+        'clean-data/all-clean-ne/GlobalVoices.en-ne',
+        'clean-data/all-clean-ne/GNOMEKDEUbuntu.en-ne',
+        'clean-data/all-clean-ne/nepali-penn-treebank',
+    ]
+    for l in ['ne', 'en']:
+        files = [f"{s}.{l}" for s in train_sets]
+        os.system(f"cat {' '.join(files)} > {tmp_dir}tmp.train.{l}")
+        
+    for src, tgt in [('devtest', 'valid'), ('test', 'test')]:
+        for l in ['ne', 'en']:
+            os.system(f"cp ne-en/wikipedia.{src}.ne-en.{l} {tmp_dir}tmp.{tgt}.{l}")
 
 def develop_data(tmp_dir: str, src_lang: str, tgt_lang: str):
     if src_lang == "de" and tgt_lang == "en":
         develop_de_en_data(tmp_dir)
+    if src_lang == "ne" and tgt_lang == "en":
+        develop_ne_en_data(tmp_dir)
+
+def preprocess_moses(tmp_dir: str, src_lang: str, tgt_lang: str):
+    num_threads = 1
+    # Tokenize the data
+    os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads {num_threads} -l {tgt_lang} \
+                < {tmp_dir}tmp.{tgt_lang} > {tmp_dir}tmp.tok.{tgt_lang}")
+    os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads {num_threads} -l {src_lang} \
+                < {tmp_dir}tmp.{src_lang} > {tmp_dir}tmp.tok.{src_lang}")
+
+    # Clean the data
+    os.system(f"perl mosesdecoder/scripts/training/clean-corpus-n.perl {tmp_dir}tmp.tok {src_lang} {tgt_lang} {tmp_dir}tmp.clean 1 175")
+
+    # Truecase (lowercase) the data
+    os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {tmp_dir}tmp.clean.{src_lang} > {tmp_dir}tmp.train.{src_lang}")
+    os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {tmp_dir}tmp.clean.{tgt_lang} > {tmp_dir}tmp.train.{tgt_lang}")
+
+    # Tokenize and clean test/validation data
+    for s in ["test", "valid"]:
+        for l in [src_lang, tgt_lang]:
+            os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads {num_threads} -l {l} \
+                        < {tmp_dir}tmp.{s}.{l} > {tmp_dir}tmp.tok.{l}")
+            os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {tmp_dir}tmp.tok.{l} > \
+                        {tmp_dir}tmp.{s}.{l}")
+
+    # Sample the data
+    no_samples = 10000
+    with open(f"{tmp_dir}tmp.train.{tgt_lang}") as f:
+        train_tgt = f.read().split("\n")
+    with open(f"{tmp_dir}tmp.train.{src_lang}") as f:
+        train_src = f.read().split("\n")
+    samples = random.sample(range(len(train_tgt)), no_samples)
+    train_tgt = [train_tgt[i] for i in samples]
+    train_src = [train_src[i] for i in samples]
+    with open(f"{tmp_dir}tmp.train.{src_lang}", "w") as f:
+        f.write("\n".join(train_src))
+    with open(f"{tmp_dir}tmp.train.{tgt_lang}", "w") as f:
+        f.write("\n".join(train_tgt))
+
+def preprocess_indic(tmp_dir: str, src_lang: str, tgt_lang: str):
+    # Process source language using Indic NLP Library
+    with open(f"{tmp_dir}tmp.test.{src_lang}") as f:
+        tgt = f.readlines()
+    # Tokenize
+    tgt = [indic_tokenize.trivial_tokenize(s, src_lang) for s in tgt]
+    # Concatenate - DOES THIS EVEN HAVE A PURPOSE?
+    tgt = [" ".join(s) for s in tgt]
+    with open(f"{tmp_dir}tmp.test.{src_lang}", "w") as f:
+        tgt = f.write("".join(tgt))
+
+    # Process target language using moses
+    num_threads = 1
+    for s in ["train", "test", "valid"]:
+        os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads {num_threads} -l en \
+                    < {tmp_dir}tmp.{s}.{tgt_lang} > {tmp_dir}tmp.tok.{tgt_lang}")
+        os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {tmp_dir}tmp.tok.{tgt_lang} > \
+                    {tmp_dir}tmp.{s}.{tgt_lang}")
+
+def preprocess_data(tmp_dir: str, src_lang: str, tgt_lang: str):
+    if (src_lang == "de" and tgt_lang == "en"):
+        preprocess_moses(tmp_dir, src_lang, tgt_lang)
+    if (src_lang == "ne" and tgt_lang == "en"):
+        preprocess_indic(tmp_dir, src_lang, tgt_lang)

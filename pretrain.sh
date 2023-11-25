@@ -4,7 +4,7 @@ rm -rf data-bin
 
 # Step 1: Generate joined dictionary on all training data
 TEXT=data
-SRC=de
+SRC=ne
 TGT=en
 fairseq-preprocess --source-lang $SRC --target-lang $TGT \
     --trainpref $TEXT/train --validpref $TEXT/valid --testpref $TEXT/test \
@@ -12,7 +12,7 @@ fairseq-preprocess --source-lang $SRC --target-lang $TGT \
     --joined-dictionary \
     --workers 20
 
-cp data-bin/dict.de.txt data/joined-dict.txt
+cp data-bin/dict.$SRC.txt data/joined-dict.txt
 
 # Step 2: Binarize PRETRAINING data
 TEXT=data/pretrain

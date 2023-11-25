@@ -2,7 +2,7 @@ rm -rf data-bin
 
 # Step 2: Binarize FINETUNING data
 TEXT=data
-SRC=de
+SRC=ne
 TGT=en
 fairseq-preprocess --source-lang $SRC --target-lang $TGT \
     --trainpref $TEXT/train --validpref $TEXT/valid --testpref $TEXT/test \
@@ -16,8 +16,8 @@ CUDA_VISIBLE_DEVICES=0 fairseq-train \
     data-bin \
     --arch transformer_iwslt_de_en --share-decoder-input-output-embed \
     --optimizer adam --adam-betas '(0.9, 0.98)' --clip-norm 0.0 \
-    --source-lang de \
-    --target-lang en \
+    --source-lang $SRC \
+    --target-lang $TGT \
     --lr 5e-4 --lr-scheduler inverse_sqrt --warmup-updates 4000 \
     --dropout 0.3 --weight-decay 0.0001 \
     --criterion label_smoothed_cross_entropy --label-smoothing 0.5 \
@@ -34,8 +34,8 @@ CUDA_VISIBLE_DEVICES=0 fairseq-train \
     --encoder-ffn-embed-dim 1024 --decoder-ffn-embed-dim 1024 \
     --encoder-layerdrop 0.0 --decoder-layerdrop 0.2 \
     --activation-dropout 0.3 \
-    --save-interval 10 \
-    --validate-interval 10 \
+    # --save-interval 10 \
+    # --validate-interval 10 \
 
 # # Transformer-base
 # CUDA_VISIBLE_DEVICES=0 fairseq-train \
