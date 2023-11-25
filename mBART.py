@@ -47,6 +47,7 @@ def noising(sentence: str, lambda_value):
     
     mask_start = random.choice(range(wl - mask_length))
 
-    del words[mask_start:mask_start+mask_length]
+    words[mask_start:mask_start+mask_length] = "_" * mask_length
+    # del words[mask_start:mask_start+mask_length]
    
     return " ".join(words)
