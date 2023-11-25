@@ -1,4 +1,5 @@
-from numpy import random
+from numpy.random import poisson
+import random
 from typing import List
 
 def mbart(src_files: List[str], tgt_files: List[str], p: float = 0.35, lambda_value: float = 3.5):
@@ -38,10 +39,10 @@ def noising(sentence, p, lambda_value):
 
     # Masking 35% of the words using Poisson distribution
     num_words_to_mask = int(len(words) * p)
-    mask_start_indices = sorted(random.sample(range(len(words)), num_words_to_mask))
+    mask_start_indices = sorted(random.sample(range(len(words)), min(num_words_to_mask, len(words))))
 
     for start_index in mask_start_indices:
-        span_length = max(1, int(random.poisson(lambda_value)))
+        span_length = max(1, int(poisson(lambda_value)))
         end_index = min(len(words), start_index + span_length)
         words[start_index:end_index] = ["[MASK]"] * (end_index - start_index)
 
