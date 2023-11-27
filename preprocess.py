@@ -57,7 +57,8 @@ os.system(f"perl mosesdecoder/scripts/training/clean-corpus-n.perl {TEMP_DIR}tmp
 
 mbart(
     [f"{TEMP_DIR}tmp.clean.en", f"{TEMP_DIR}tmp.clean.de"], 
-    [f"{TEMP_DIR}tmp.train.en", f"{TEMP_DIR}tmp.train.de"])
+    [f"{TEMP_DIR}tmp.train.en", f"{TEMP_DIR}tmp.train.de"],
+    f"{TEMP_DIR}pretrain")
 
 # Truecase (lowercase) the data
 # os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.en > {TEMP_DIR}tmp.train.en")
