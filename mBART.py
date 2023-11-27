@@ -22,7 +22,6 @@ def mbart(src_files: List[str], tgt_files: List[str], output_dir: str, lambda_va
             sentences = f.read().split("\n")
         
         noised_sentences = [noising(sentence, lambda_value) for sentence in sentences]
-        # random.shuffle(noised_sentences)
 
         src_file = os.path.basename(src_files[i])
         if src_file.startswith("tmp."):
@@ -31,11 +30,7 @@ def mbart(src_files: List[str], tgt_files: List[str], output_dir: str, lambda_va
         with open(os.path.join(output_dir, f"{src_file[i]}"), "w") as f:
             f.write("\n".join(noised_sentences))
 
-        # t = os.path.basename(tgt_files[i])
-        # if t.startswith("tmp."):
-        #     t = t.replace("tmp.", "")
         os.system(f"cp {src_files[i]} {tgt_files[i]}")
-        # print(foo)
 
 def noising(sentence: str, lambda_value):
     """
@@ -55,15 +50,15 @@ def noising(sentence: str, lambda_value):
     if wl == 0:
         return ""
     
-    mask_length = min(wl, poisson(lam=lambda_value)) #int(wl * p)
+    mask_length = min(wl, poisson(lam=lambda_value))
 
     if mask_length == wl:
         mask_start = 0
     else:
         mask_start = random.choice(range(wl - mask_length))
 
-    # words[mask_start:mask_start+mask_length] = "" * mask_length
-    del words[mask_start:mask_start+mask_length]
+    words[mask_start:mask_start+mask_length] = "_" * mask_length
+    # del words[mask_start:mask_start+mask_length]
     # words.insert(mask_start, "_")
    
     return " ".join(words)
