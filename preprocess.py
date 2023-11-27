@@ -58,8 +58,8 @@ os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads {NUM_THR
 os.system(f"perl mosesdecoder/scripts/training/clean-corpus-n.perl {TEMP_DIR}tmp.tok de en {TEMP_DIR}tmp.clean 1 175")
 
 # Truecase (lowercase) the data
-# os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.en > {TEMP_DIR}tmp.train.en")
-# os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.de > {TEMP_DIR}tmp.train.de")
+os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.en > {TEMP_DIR}tmp.train.en")
+os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.de > {TEMP_DIR}tmp.train.de")
 
 # Sample the data
 no_samples = 10000
