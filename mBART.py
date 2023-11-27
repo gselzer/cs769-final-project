@@ -31,6 +31,11 @@ def mbart(src_files: List[str], tgt_files: List[str], output_dir: str, lambda_va
         with open(os.path.join(output_dir, f"{src_file[i]}"), "w") as f:
             f.write("\n".join(noised_sentences))
 
+        t = os.path.basename(tgt_files[i])
+        if t.startswith("tmp."):
+            t = t.replace("tmp.", "")
+        foo = os.system(f"cp {tgt_files[i]} {os.path.join(output_dir, t)}")
+        print(foo)
 
 def noising(sentence: str, lambda_value):
     """
