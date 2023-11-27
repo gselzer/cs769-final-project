@@ -5,47 +5,27 @@ from typing import List
 
 def mbart(
         src_files: List[str], 
-        tgt_files: List[str], 
+        # tgt_files: List[str], 
         output_dir: str, 
         lambda_value: float = 3.5):
  
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    for src_file in src_files:
-        with open(src_file, "r") as f:
-            src = f.readlines()
+    for i in range(len(src_files)):
+        with open(src_files[i], "r") as f:
+            sentences = f.read().split("\n")
+        
+        noised_sentences = [noising(sentence, lambda_value) for sentence in sentences]
 
-        noised = [noising(sentence, lambda_value) for sentence in src]
-        src_file = os.path.basename(src_file)
+        src_file = os.path.basename(src_files[i])
         if src_file.startswith("tmp."):
             src_file = src_file.replace("tmp.", "")
 
         with open(os.path.join(output_dir, f"{src_file}"), "w") as f:
-            f.writelines(noised)
+            f.write("\n".join(noised_sentences))
 
-    for tgt_file in tgt_files:
-        t = os.path.basename(tgt_file)
-        if t.startswith("tmp."):
-            t = t.replace("tmp.", "")
-        foo = os.system(f"cp {tgt_file} {os.path.join(output_dir, t)}")
-        print(foo)
-
-    
-    # for i in range(len(src_files)):
-    #     with open(src_files[i], "r") as f:
-    #         sentences = f.read().split("\n")
-        
-    #     noised_sentences = [noising(sentence, lambda_value) for sentence in sentences]
-
-    #     src_file = os.path.basename(src_files[i])
-    #     if src_file.startswith("tmp."):
-    #         src_file = src_file.replace("tmp.", "")
-
-    #     with open(os.path.join(output_dir, f"{src_file[i]}"), "w") as f:
-    #         f.write("\n".join(noised_sentences))
-
-    #     os.system(f"cp {src_files[i]} {tgt_files[i]}")
+        # os.system(f"cp {src_files[i]} {tgt_files[i]}")
 
 def noising(sentence: str, lambda_value: float):
     """

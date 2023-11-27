@@ -8,8 +8,6 @@ from mBART import mbart
 # Configuration Constants
 DATA_DIR = "data/"
 TEMP_DIR = "temp/"
-SRC_LANG = "de"
-TGT_LANG = "en"
 DELETE_TEMP_DATA = True
 NUM_THREADS = 1
 
@@ -58,8 +56,8 @@ os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads {NUM_THR
 os.system(f"perl mosesdecoder/scripts/training/clean-corpus-n.perl {TEMP_DIR}tmp.tok de en {TEMP_DIR}tmp.clean 1 175")
 
 # Truecase (lowercase) the data
-os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.en > {TEMP_DIR}tmp.train.en")
-os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.de > {TEMP_DIR}tmp.train.de")
+# os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.en > {TEMP_DIR}tmp.train.en")
+# os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.de > {TEMP_DIR}tmp.train.de")
 
 # Sample the data
 no_samples = 10000
@@ -77,9 +75,9 @@ with open(TEMP_DIR+"tmp.train.de", "w") as f:
 
 
 mbart(
-    [f"{TEMP_DIR}tmp.train.{SRC_LANG}", f"{TEMP_DIR}tmp.valid.{SRC_LANG}", f"{TEMP_DIR}tmp.test.{SRC_LANG}"],
-    [f"{TEMP_DIR}tmp.train.{TGT_LANG}", f"{TEMP_DIR}tmp.valid.{TGT_LANG}", f"{TEMP_DIR}tmp.test.{TGT_LANG}"],
-    f"{TEMP_DIR}pretrain")
+    [f"{TEMP_DIR}tmp.train.en", f"{TEMP_DIR}tmp.train.en"], 
+    # [f"train.en", f"train.de"],
+    f"{DATA_DIR}pretrain")
 
 
 # Grab test/validation data
