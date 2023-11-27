@@ -8,6 +8,8 @@ from mBART import mbart
 # Configuration Constants
 DATA_DIR = "data/"
 TEMP_DIR = "temp/"
+SRC_LANG = "de"
+TGT_LANG = "en"
 DELETE_TEMP_DATA = True
 NUM_THREADS = 1
 
@@ -55,11 +57,6 @@ os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads {NUM_THR
 # Clean the data
 os.system(f"perl mosesdecoder/scripts/training/clean-corpus-n.perl {TEMP_DIR}tmp.tok de en {TEMP_DIR}tmp.clean 1 175")
 
-mbart(
-    [f"{TEMP_DIR}tmp.clean.en", f"{TEMP_DIR}tmp.clean.de"], 
-    [f"{TEMP_DIR}tmp.train.en", f"{TEMP_DIR}tmp.train.de"],
-    f"{TEMP_DIR}pretrain")
-
 # Truecase (lowercase) the data
 # os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.en > {TEMP_DIR}tmp.train.en")
 # os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.de > {TEMP_DIR}tmp.train.de")
@@ -77,6 +74,13 @@ with open(TEMP_DIR+"tmp.train.en", "w") as f:
     f.write("\n".join(train_en))
 with open(TEMP_DIR+"tmp.train.de", "w") as f:
     f.write("\n".join(train_de))
+
+
+mbart(
+    [f"{TEMP_DIR}tmp.train.{SRC_LANG}", f"{TEMP_DIR}tmp.valid.{SRC_LANG}", f"{TEMP_DIR}tmp.test.{SRC_LANG}"],
+    [f"{TEMP_DIR}tmp.train.{TGT_LANG}", f"{TEMP_DIR}tmp.valid.{TGT_LANG}", f"{TEMP_DIR}tmp.test.{TGT_LANG}"],
+    f"{TEMP_DIR}pretrain")
+
 
 # Grab test/validation data
 for file in ['IWSLT14.TED.tst2010', 'IWSLT14.TED.tst2011', 'IWSLT14.TED.tst2012']:
