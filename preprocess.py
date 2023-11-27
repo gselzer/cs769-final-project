@@ -76,6 +76,10 @@ with open(TEMP_DIR+"tmp.train.en", "w") as f:
 with open(TEMP_DIR+"tmp.train.de", "w") as f:
     f.write("\n".join(train_de))
 
+mbart(
+    [f"{TEMP_DIR}tmp.train.en", f"{TEMP_DIR}tmp.train.de"], 
+    f"{TEMP_DIR}pretrain")
+
 # Grab test/validation data
 for file in ['IWSLT14.TED.tst2010', 'IWSLT14.TED.tst2011', 'IWSLT14.TED.tst2012']:
     for l in ['de', 'en']:
@@ -111,11 +115,6 @@ for s in ["test", "valid"]:
         os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.tok.{l} > \
                     {TEMP_DIR}tmp.{s}.{l}")
         os.system(f"cp {TEMP_DIR}tmp.{s}.{l} {TEMP_DIR}pretrain/{s}.{l}")
-
-mbart(
-    [f"{TEMP_DIR}tmp.train.en", f"{TEMP_DIR}tmp.train.de"], 
-    # [f"train.en", f"train.de"],
-    f"{TEMP_DIR}pretrain")
 
 
 # Learn BPE
