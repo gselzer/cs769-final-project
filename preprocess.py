@@ -56,8 +56,13 @@ os.system(f"perl mosesdecoder/scripts/tokenizer/tokenizer.perl -threads {NUM_THR
 os.system(f"perl mosesdecoder/scripts/training/clean-corpus-n.perl {TEMP_DIR}tmp.tok de en {TEMP_DIR}tmp.clean 1 175")
 
 # Truecase (lowercase) the data
-# os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.en > {TEMP_DIR}tmp.train.en")
-# os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.de > {TEMP_DIR}tmp.train.de")
+os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.en > {TEMP_DIR}tmp.train.en")
+os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.de > {TEMP_DIR}tmp.train.de")
+
+mbart(
+    [f"{TEMP_DIR}tmp.train.en", f"{TEMP_DIR}tmp.train.de"], 
+    # [f"train.en", f"train.de"],
+    f"{DATA_DIR}pretrain")
 
 # Sample the data
 no_samples = 10000
@@ -72,12 +77,6 @@ with open(TEMP_DIR+"tmp.train.en", "w") as f:
     f.write("\n".join(train_en))
 with open(TEMP_DIR+"tmp.train.de", "w") as f:
     f.write("\n".join(train_de))
-
-
-mbart(
-    [f"{TEMP_DIR}tmp.train.en", f"{TEMP_DIR}tmp.train.en"], 
-    # [f"train.en", f"train.de"],
-    f"{DATA_DIR}pretrain")
 
 
 # Grab test/validation data
