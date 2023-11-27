@@ -59,10 +59,6 @@ os.system(f"perl mosesdecoder/scripts/training/clean-corpus-n.perl {TEMP_DIR}tmp
 os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.en > {TEMP_DIR}tmp.train.en")
 os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {TEMP_DIR}tmp.clean.de > {TEMP_DIR}tmp.train.de")
 
-mbart(
-    [f"{TEMP_DIR}tmp.train.en", f"{TEMP_DIR}tmp.train.de"], 
-    # [f"train.en", f"train.de"],
-    f"{DATA_DIR}pretrain")
 
 # Sample the data
 no_samples = 10000
@@ -78,6 +74,10 @@ with open(TEMP_DIR+"tmp.train.en", "w") as f:
 with open(TEMP_DIR+"tmp.train.de", "w") as f:
     f.write("\n".join(train_de))
 
+mbart(
+    [f"{TEMP_DIR}tmp.train.en", f"{TEMP_DIR}tmp.train.de"], 
+    # [f"train.en", f"train.de"],
+    f"{DATA_DIR}pretrain")
 
 # Grab test/validation data
 for file in ['IWSLT14.TED.tst2010', 'IWSLT14.TED.tst2011', 'IWSLT14.TED.tst2012']:
