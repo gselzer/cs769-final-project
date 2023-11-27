@@ -8,6 +8,8 @@ from mBART import mbart
 # Configuration Constants
 DATA_DIR = "data/"
 TEMP_DIR = "temp/"
+SRC_LANG = "de"
+TGT_LANG = "en"
 DELETE_TEMP_DATA = True
 NUM_THREADS = 1
 
@@ -77,7 +79,7 @@ with open(TEMP_DIR+"tmp.train.de", "w") as f:
 mbart(
     [f"{TEMP_DIR}tmp.train.en", f"{TEMP_DIR}tmp.train.de"], 
     # [f"train.en", f"train.de"],
-    f"{DATA_DIR}pretrain")
+    f"{TEMP_DIR}pretrain")
 
 # Grab test/validation data
 for file in ['IWSLT14.TED.tst2010', 'IWSLT14.TED.tst2011', 'IWSLT14.TED.tst2012']:
@@ -142,11 +144,21 @@ os.system(f"subword-nmt learn-joint-bpe-and-vocab --input {TEMP_DIR}tmp.train.en
 # with open(f'{TEMP_DIR}tmp.train.en', 'a') as target_file:
 #     target_file.write(data_to_append)
 
-# Apply BPE
+# # Apply BPE
+# for s in ["train", "test", "valid"]:
+#     for l in ["de", "en"]:
+#         os.system(f"subword-nmt apply-bpe -c {TEMP_DIR}code.txt --vocabulary {TEMP_DIR}vocab.{l} < \
+#                     {TEMP_DIR}tmp.{s}.{l} > {DATA_DIR}{s}.{l} --glossaries '<S_\d+>' '<T_\d+>'")
+
+# Apply BPE to pretrained data
+os.makedirs(f"{DATA_DIR}pretrain")
 for s in ["train", "test", "valid"]:
-    for l in ["de", "en"]:
-        os.system(f"subword-nmt apply-bpe -c {TEMP_DIR}code.txt --vocabulary {TEMP_DIR}vocab.{l} < \
-                    {TEMP_DIR}tmp.{s}.{l} > {DATA_DIR}{s}.{l} --glossaries '<S_\d+>' '<T_\d+>'")
+    for l in [SRC_LANG, TGT_LANG]:
+        os.system(f"subword-nmt apply-bpe -c {TEMP_DIR}code.txt --vocabulary {TEMP_DIR}vocab.en < \
+                    {TEMP_DIR}pretrain/{s}.{l} > {DATA_DIR}pretrain/{s}.{l} --glossaries '<S_\d+>' '<T_\d+>'")
+
+os.system(f"cp {TEMP_DIR}code.txt {DATA_DIR}code.txt")
+
 
 # Delete Temp Files
 if DELETE_TEMP_DATA:

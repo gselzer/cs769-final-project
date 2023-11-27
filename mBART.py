@@ -5,7 +5,6 @@ from typing import List
 
 def mbart(
         src_files: List[str], 
-        # tgt_files: List[str], 
         output_dir: str, 
         lambda_value: float = 3.5):
  
@@ -24,8 +23,6 @@ def mbart(
 
         with open(os.path.join(output_dir, f"{src_file}"), "w") as f:
             f.write("\n".join(noised_sentences))
-
-        # os.system(f"cp {src_files[i]} {tgt_files[i]}")
 
 def noising(sentence: str, lambda_value: float):
     """
