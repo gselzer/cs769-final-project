@@ -152,7 +152,7 @@ os.system(f"subword-nmt learn-joint-bpe-and-vocab --input {TEMP_DIR}tmp.train.en
 #                     {TEMP_DIR}tmp.{s}.{l} > {DATA_DIR}{s}.{l} --glossaries '<S_\d+>' '<T_\d+>'")
 
 # Apply BPE to pretrained data
-os.makedirs(f"{DATA_DIR}pretrain")
+# os.makedirs(f"{DATA_DIR}pretrain")
 for s in ["train", "test", "valid"]:
     for l in [SRC_LANG, TGT_LANG]:
         os.system(f"subword-nmt apply-bpe -c {TEMP_DIR}code.txt --vocabulary {TEMP_DIR}vocab.en < \
