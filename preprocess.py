@@ -157,6 +157,7 @@ for s in ["train", "test", "valid"]:
     for l in [SRC_LANG, TGT_LANG]:
         os.system(f"subword-nmt apply-bpe -c {TEMP_DIR}code.txt --vocabulary {TEMP_DIR}vocab.en < \
                     {TEMP_DIR}pretrain/{s}.{l} > {DATA_DIR}pretrain/{s}.{l} --glossaries '<S_\d+>' '<T_\d+>'")
+        os.system(f"cp {TEMP_DIR}tmp.{s}.{l} {DATA_DIR}{s}.{l}")
 
 os.system(f"cp {TEMP_DIR}code.txt {DATA_DIR}code.txt")
 
