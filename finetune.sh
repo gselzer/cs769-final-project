@@ -34,8 +34,9 @@ CUDA_VISIBLE_DEVICES=0 fairseq-train \
     --encoder-ffn-embed-dim 1024 --decoder-ffn-embed-dim 1024 \
     --encoder-layerdrop 0.0 --decoder-layerdrop 0.2 \
     --activation-dropout 0.3 \
-    # --save-interval 10 \
-    # --validate-interval 10 \
+    --max-epoch 40 \
+    --save-interval 10 \
+    --validate-interval 10 \
 
 # # Transformer-base
 # CUDA_VISIBLE_DEVICES=0 fairseq-train \

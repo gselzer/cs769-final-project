@@ -6,13 +6,13 @@ rm -rf data-bin
 TEXT=data
 SRC=ne
 TGT=en
-fairseq-preprocess --source-lang $SRC --target-lang $TGT \
-    --trainpref $TEXT/train --validpref $TEXT/valid --testpref $TEXT/test \
-    --destdir data-bin \
-    --joined-dictionary \
-    --workers 20
+# fairseq-preprocess --source-lang $SRC --target-lang $TGT \
+#     --trainpref $TEXT/train --validpref $TEXT/valid --testpref $TEXT/test \
+#     --destdir data-bin \
+#     --joined-dictionary \
+#     --workers 20
 
-cp data-bin/dict.$SRC.txt data/joined-dict.txt
+# cp data-bin/dict.$SRC.txt data/joined-dict.txt
 
 # Step 2: Binarize PRETRAINING data
 TEXT=data/pretrain
@@ -47,5 +47,6 @@ CUDA_VISIBLE_DEVICES=0 fairseq-train \
     --encoder-ffn-embed-dim 1024 --decoder-ffn-embed-dim 1024 \
     --encoder-layerdrop 0.0 --decoder-layerdrop 0.2 \
     --activation-dropout 0.3 \
+    --max-epoch 40 \
     --save-interval 10 \
     --validate-interval 10

@@ -204,16 +204,6 @@ tar xvzf $NE_DICT
 cp dictionaries/dict.ne $NE_ROOT/dictionary.$NE_TGT-$SRC
 REMOVE_FILE_PATHS+=( $NE_DICT dictionaries )
 
-
-# Download test sets
-download_data $DATA/wikipedia_en_ne_si_test_sets.tgz "https://github.com/facebookresearch/flores/raw/main/previous_releases/floresv1/data/wikipedia_en_ne_si_test_sets.tgz"
-REMOVE_FILE_PATHS+=( $MOSES $NE_TAGGED original.zip $DATA/nepali-penn-treebank.$SRC.patch $DATA/nepali-penn-treebank.$NE_TGT.patch )
-
-pushd $DATA/
-tar -vxf wikipedia_en_ne_si_test_sets.tgz
-popd
-
-
 # Remove the temporary files
 for ((i=0;i<${#REMOVE_FILE_PATHS[@]};++i)); do
   rm -rf ${REMOVE_FILE_PATHS[i]}
