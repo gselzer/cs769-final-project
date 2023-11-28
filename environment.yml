@@ -7,8 +7,14 @@ dependencies:
   - tqdm
   - pytorch
   - fairseq
+  - stanza
+  - tqdm
   - pip
+  - sacremoses
+  - numpy < 1.24
   - pip:
+    - compare-mt
+    - numpy < 1.24
     - subword-nmt
     - indic-nlp-library
     - torchvision

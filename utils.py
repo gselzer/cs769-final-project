@@ -1,8 +1,11 @@
 import os
-import re
-import subprocess
 import platform
 import random
+import re
+import shutil
+import subprocess
+import tarfile
+import urllib.request
 from indicnlp.tokenize import indic_tokenize
 from string import punctuation
 
@@ -363,7 +366,14 @@ def _read_and_clean(infile: str, outfile: str):
     with open(outfile, "w") as f:
         f.write("\n".join(cleaned))
 
-def develop_de_en_data(tmp_dir: str):
+def download_de_en_data(tmp_dir: str):
+
+    if not os.path.exists("de-en"):
+        urllib.request.urlretrieve("http://dl.fbaipublicfiles.com/fairseq/data/iwslt14/de-en.tgz", "de-en.tgz")
+        file = tarfile.open("de-en.tgz")
+        file.extractall()
+        os.remove("de-en.tgz")
+
     # Sample source and target
     _read_and_clean(f"de-en/train.tags.de-en.en", tmp_dir+f"tmp.en")
     _read_and_clean(f"de-en/train.tags.de-en.de", tmp_dir+f"tmp.de")
@@ -396,7 +406,27 @@ def develop_de_en_data(tmp_dir: str):
                 f.write("\n".join(cleaned))
 
 def develop_ne_en_data(tmp_dir: str):
+    # Download data
+    if os.path.exists("ne-en"):
+        shutil.rmtree("ne-en")
+
+    urllib.request.urlretrieve("https://raw.githubusercontent.com/facebookresearch/flores/main/previous_releases/floresv1/data/wikipedia_en_ne_si_test_sets.tgz", "test_sets.tgz")
+    file = tarfile.open("test_sets.tgz")
+    file.extractall()
+    os.remove("test_sets.tgz")
+
+    os.mkdir("ne-en")
+
+    for src, tgt in [('devtest', 'valid'), ('test', 'test')]:
+        for l in ['ne', 'en']:
+            outfile = os.path.join("ne-en", f"{tgt}.{l}")
+            os.system(f"cp wikipedia_en_ne_si_test_sets/wikipedia.{src}.ne-en.{l} {outfile}")
+    
+    shutil.rmtree("wikipedia_en_ne_si_test_sets")
+
     # Training data
+    os.system("bash ./download-data.sh")
+
     train_sets = [
         'clean-data/all-clean-ne/bible.en-ne',
         'clean-data/all-clean-ne/bible_dup.en-ne',
@@ -406,15 +436,21 @@ def develop_ne_en_data(tmp_dir: str):
     ]
     for l in ['ne', 'en']:
         files = [f"{s}.{l}" for s in train_sets]
-        os.system(f"cat {' '.join(files)} > {tmp_dir}tmp.train.{l}")
-        
-    for src, tgt in [('devtest', 'valid'), ('test', 'test')]:
-        for l in ['ne', 'en']:
-            os.system(f"cp ne-en/wikipedia.{src}.ne-en.{l} {tmp_dir}tmp.{tgt}.{l}")
+        outfile = os.path.join("ne-en", f"train.{l}")
+        os.system(f"cat {' '.join(files)} > {outfile}")
+    
+    shutil.rmtree("clean-data")
+    
+    # Preprocess data
+    for l in ["en", "ne"]:
+        for s in ["train", "test", "valid"]:
+            src = os.path.join("ne-en", f"{s}.{l}")
+            tgt = f"{tmp_dir}tmp.{s}.{l}"
+            shutil.copyfile(src, tgt)    
 
-def develop_data(tmp_dir: str, src_lang: str, tgt_lang: str):
+def download_data(tmp_dir: str, src_lang: str, tgt_lang: str):
     if src_lang == "de" and tgt_lang == "en":
-        develop_de_en_data(tmp_dir)
+        download_de_en_data(tmp_dir)
     if src_lang == "ne" and tgt_lang == "en":
         develop_ne_en_data(tmp_dir)
 

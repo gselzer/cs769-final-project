@@ -175,6 +175,7 @@ download_data $DATA/nepali-penn-treebank.$SRC.patch $EN_TAGGED_PATCH_URL
 download_data $DATA/nepali-penn-treebank.$NE_TGT.patch $NE_TAGGED_PATCH_URL
 download_data original.zip $NE_TAGGED_URL
 unzip -o original.zip -d $ROOT
+REMOVE_FILE_PATHS+=( original.zip )
 
 cat $NE_TAGGED/00.txt $NE_TAGGED/01.txt $NE_TAGGED/02.txt > $NE_TAGGED/nepali-penn-treebank.$SRC
 cat $NE_TAGGED/00ne_revised.txt $NE_TAGGED/01ne_revised.txt $NE_TAGGED/02ne_revised.txt > $NE_TAGGED/nepali-penn-treebank.$NE_TGT
@@ -196,6 +197,7 @@ cat $NE_TAGGED/nepali-penn-treebank-patched.$NE_TGT | \
   perl -CIO -anpe "$NE_PATCH_REGEX" | \
   $MOSES_TOK/detokenizer.perl -l $SRC > $NE_ROOT/nepali-penn-treebank.$NE_TGT
 
+REMOVE_FILE_PATHS+=( $NE_TAGGED )
 
 # Download nepali dictionary data
 NE_DICT=$NE_ROOT/dictionaries
@@ -203,16 +205,6 @@ download_data $NE_DICT "http://www.seas.upenn.edu/~nlp/resources/TACL-data-relea
 tar xvzf $NE_DICT
 cp dictionaries/dict.ne $NE_ROOT/dictionary.$NE_TGT-$SRC
 REMOVE_FILE_PATHS+=( $NE_DICT dictionaries )
-
-
-# Download test sets
-download_data $DATA/wikipedia_en_ne_si_test_sets.tgz "https://github.com/facebookresearch/flores/raw/main/previous_releases/floresv1/data/wikipedia_en_ne_si_test_sets.tgz"
-REMOVE_FILE_PATHS+=( $MOSES $NE_TAGGED original.zip $DATA/nepali-penn-treebank.$SRC.patch $DATA/nepali-penn-treebank.$NE_TGT.patch )
-
-pushd $DATA/
-tar -vxf wikipedia_en_ne_si_test_sets.tgz
-popd
-
 
 # Remove the temporary files
 for ((i=0;i<${#REMOVE_FILE_PATHS[@]};++i)); do

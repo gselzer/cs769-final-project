@@ -1,12 +1,13 @@
-*.en
-*.de
+# Script Results
 checkpoints/
-eval-checkpoints/
+data/
 data-bin/
-code.txt
-orig/
 results/
-iwslt14.tokenized.de-en/
+comparisons/
+
+# Languages
+de-en/
+ne-en/
 
 .vscode/
 __pycache__
