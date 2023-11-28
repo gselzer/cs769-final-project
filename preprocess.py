@@ -5,7 +5,7 @@ from techniques.interleaving.linguistic import tag
 from techniques.mRASP.mrasp import mRASP
 import utils
 
-from mBART import mbart
+from techniques.mBART.mBART import mbart
 
 # Configuration Constants
 DATA_DIR = "data/"
@@ -40,9 +40,7 @@ utils.preprocess_data(TEMP_DIR, SRC_LANG, TGT_LANG)
 #     # Only add POS for source data
 #     for l in [SRC_LANG]:
 #         tag(f"{TEMP_DIR}tmp.{s}.{l}", l)
-mbart(
-    [f"{TEMP_DIR}tmp.train.en", f"{TEMP_DIR}tmp.train.de"], 
-    f"{TEMP_DIR}pretrain")
+mbart( TEMP_DIR, f"{TEMP_DIR}pretrain", SRC_LANG, TGT_LANG)
 
 
 # Learn BPE
@@ -109,7 +107,7 @@ for s in ["train", "test", "valid"]:
 os.makedirs(f"{DATA_DIR}pretrain")
 for s in ["train", "test", "valid"]:
     for l in [SRC_LANG, TGT_LANG]:
-        os.system(f"subword-nmt apply-bpe -c {TEMP_DIR}code.txt --vocabulary {TEMP_DIR}vocab.en < \
+        os.system(f"subword-nmt apply-bpe -c {TEMP_DIR}code.txt --vocabulary {TEMP_DIR}vocab.{l} < \
                     {TEMP_DIR}pretrain/{s}.{l} > {DATA_DIR}pretrain/{s}.{l} --glossaries {glossary_str}")
 
 os.system(f"cp {TEMP_DIR}code.txt {DATA_DIR}code.txt")
