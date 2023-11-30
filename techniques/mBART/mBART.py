@@ -45,6 +45,9 @@ def noising(sentence: str, lambda_value: float):
     Returns:
         str: Noised sentence.
     """
+
+    return sentence
+
     words = sentence.split()
 
     wl = len(words)
