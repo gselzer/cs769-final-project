@@ -40,7 +40,7 @@ utils.preprocess_data(TEMP_DIR, SRC_LANG, TGT_LANG)
 #     # Only add POS for source data
 #     for l in [SRC_LANG]:
 #         tag(f"{TEMP_DIR}tmp.{s}.{l}", l)
-mbart( TEMP_DIR, f"{TEMP_DIR}pretrain", SRC_LANG, TGT_LANG)
+# mbart( TEMP_DIR, f"{TEMP_DIR}pretrain", SRC_LANG, TGT_LANG)
 
 
 # Learn BPE
@@ -49,28 +49,28 @@ os.system(f"subword-nmt learn-joint-bpe-and-vocab --input {TEMP_DIR}tmp.train.{T
             -s {num_bpe_tokens} -o {TEMP_DIR}code.txt --write-vocabulary {TEMP_DIR}vocab.{TGT_LANG} {TEMP_DIR}vocab.{SRC_LANG}")
 
 
-# # Joint Dropout
-# wa = utils.WordAligner()
-# wa.word_alignments(source_file=f"{TEMP_DIR}tmp.train.de",
-#                     target_file=f"{TEMP_DIR}tmp.train.en",
-#                     output_file=f'{TEMP_DIR}eflomal.de.en',
-#                     model = '3')
-# JDR = utils.JointDropout(debug=False)
-# JDR.joint_dropout(f"{TEMP_DIR}tmp.train.de", f"{TEMP_DIR}tmp.train.en", f'{TEMP_DIR}eflomal.de.en',
-#                   output_dir=f'{TEMP_DIR}', src_suffix='de',trg_suffix='en')
+# Joint Dropout
+wa = utils.WordAligner()
+wa.word_alignments(source_file=f"{TEMP_DIR}tmp.train.de",
+                    target_file=f"{TEMP_DIR}tmp.train.en",
+                    output_file=f'{TEMP_DIR}eflomal.de.en',
+                    model = '3')
+JDR = utils.JointDropout(debug=False)
+JDR.joint_dropout(f"{TEMP_DIR}tmp.train.de", f"{TEMP_DIR}tmp.train.en", f'{TEMP_DIR}eflomal.de.en',
+                  output_dir=f'{TEMP_DIR}', src_suffix='de',trg_suffix='en')
 
-# # Concatenate JDR output with the tmp.train.en/tmp.train.de files.
-# with open(f'{TEMP_DIR}jdr.src.de', 'r') as source_file:
-#     data_to_append = source_file.read()
+# Concatenate JDR output with the tmp.train.en/tmp.train.de files.
+with open(f'{TEMP_DIR}jdr.src.de', 'r') as source_file:
+    data_to_append = source_file.read()
 
-# with open(f'{TEMP_DIR}tmp.train.de', 'a') as target_file:
-#     target_file.write(data_to_append)
+with open(f'{TEMP_DIR}tmp.train.de', 'a') as target_file:
+    target_file.write(data_to_append)
 
-# with open(f'{TEMP_DIR}jdr.trg.en', 'r') as source_file:
-#     data_to_append = source_file.read()
+with open(f'{TEMP_DIR}jdr.trg.en', 'r') as source_file:
+    data_to_append = source_file.read()
 
-# with open(f'{TEMP_DIR}tmp.train.en', 'a') as target_file:
-#     target_file.write(data_to_append)
+with open(f'{TEMP_DIR}tmp.train.en', 'a') as target_file:
+    target_file.write(data_to_append)
 
 # Apply BPE
 glossary = [
