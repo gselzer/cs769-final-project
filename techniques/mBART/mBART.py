@@ -8,7 +8,7 @@ def mbart(
         output_dir: str, 
         src_lang: str,
         tgt_lang: str,
-        lambda_value: float = 1.5): # 3.5
+        lambda_value: float = 1): # 3.5
  
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -19,7 +19,8 @@ def mbart(
         with open(file, "r") as f:
             sentences = f.read().split("\n")
         
-        noised_sentences = [noising(sentence, lambda_value) for sentence in sentences]
+        noised_sentences = sentences
+        # noised_sentences = [noising(sentence, lambda_value) for sentence in sentences]
 
         src_file = os.path.basename(file)
         if src_file.startswith("tmp."):

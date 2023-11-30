@@ -40,7 +40,7 @@ utils.preprocess_data(TEMP_DIR, SRC_LANG, TGT_LANG)
 #     # Only add POS for source data
 #     for l in [SRC_LANG]:
 #         tag(f"{TEMP_DIR}tmp.{s}.{l}", l)
-# mbart( TEMP_DIR, f"{TEMP_DIR}pretrain", SRC_LANG, TGT_LANG)
+mbart( TEMP_DIR, f"{TEMP_DIR}pretrain", SRC_LANG, TGT_LANG)
 
 
 # Learn BPE
