@@ -8,7 +8,7 @@ def mbart(
         output_dir: str, 
         src_lang: str,
         tgt_lang: str,
-        lambda_value: float = 3.5):
+        lambda_value: float = 1.5): # 3.5
  
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -46,8 +46,6 @@ def noising(sentence: str, lambda_value: float):
         str: Noised sentence.
     """
 
-    return sentence
-
     words = sentence.split()
 
     wl = len(words)
@@ -62,7 +60,7 @@ def noising(sentence: str, lambda_value: float):
     else:
         mask_start = random.choice(range(wl - mask_length))
 
-    words = ["<mask>" if i >= mask_start and i < mask_start + mask_length else words[i] for i in range(len(words))]
+    words = ["MASK" if i >= mask_start and i < mask_start + mask_length else words[i] for i in range(len(words))]
     # del words[mask_start:mask_start+mask_length]
     # words.insert(mask_start, "_")
    

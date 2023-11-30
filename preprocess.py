@@ -95,7 +95,7 @@ glossary = [
     "SYM",
     "VERB",
     # MBART
-    "<mask>",
+    "MASK",
 ]
 glossary_str = " ".join([f"'{d}'" for d in glossary])
 for s in ["train", "test", "valid"]:
