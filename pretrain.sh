@@ -12,7 +12,7 @@ fairseq-preprocess --source-lang $SRC --target-lang $TGT \
     --joined-dictionary \
     --workers 20
 
-cp data-bin/dict.$SRC.txt data/joined-dict.txt
+cp data-bin/dict.de.txt data/joined-dict.txt
 
 # Step 2: Binarize PRETRAINING data
 TEXT=data/pretrain
@@ -21,10 +21,9 @@ fairseq-preprocess --source-lang $SRC --target-lang $TGT \
     --destdir data-bin \
     --srcdict data/joined-dict.txt \
     --tgtdict data/joined-dict.txt \
-    --criterion masked_lm \
     --workers 20
 
-# --criterion label_smoothed_cross_entropy --label-smoothing 0.5 \
+
 # Train using fairseq
 CUDA_VISIBLE_DEVICES=0 fairseq-train \
     data-bin \
@@ -34,8 +33,8 @@ CUDA_VISIBLE_DEVICES=0 fairseq-train \
     --target-lang $TGT \
     --lr 5e-4 --lr-scheduler inverse_sqrt --warmup-updates 4000 \
     --dropout 0.3 --weight-decay 0.0001 \
-    --criterion masked_lm \
-    --batch-size 16 \
+    --criterion label_smoothed_cross_entropy --label-smoothing 0.5 \
+    --max-tokens 4096 \
     --scoring sacrebleu \
     --eval-bleu \
     --eval-bleu-args '{"beam": 5, "max_len_a": 1.2, "max_len_b": 10}' \
