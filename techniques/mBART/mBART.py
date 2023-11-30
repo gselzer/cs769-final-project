@@ -8,7 +8,7 @@ def mbart(
         output_dir: str, 
         src_lang: str,
         tgt_lang: str,
-        lambda_value: float = 3.5): # 3.5
+        lambda_value: float = 1.75): # 3.5
  
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
