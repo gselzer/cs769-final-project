@@ -21,9 +21,10 @@ fairseq-preprocess --source-lang $SRC --target-lang $TGT \
     --destdir data-bin \
     --srcdict data/joined-dict.txt \
     --tgtdict data/joined-dict.txt \
+    --criterion masked_lm \
     --workers 20
 
-
+# --criterion label_smoothed_cross_entropy --label-smoothing 0.5 \
 # Train using fairseq
 CUDA_VISIBLE_DEVICES=0 fairseq-train \
     data-bin \
@@ -33,7 +34,7 @@ CUDA_VISIBLE_DEVICES=0 fairseq-train \
     --target-lang $TGT \
     --lr 5e-4 --lr-scheduler inverse_sqrt --warmup-updates 4000 \
     --dropout 0.3 --weight-decay 0.0001 \
-    --criterion label_smoothed_cross_entropy --label-smoothing 0.5 \
+    --criterion masked_lm \
     --batch-size 16 \
     --scoring sacrebleu \
     --eval-bleu \
