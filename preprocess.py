@@ -3,6 +3,7 @@ import os
 import shutil
 from techniques.interleaving.linguistic import tag
 from techniques.mRASP.mrasp import mRASP
+from techniques.mBART.mbart import mBART
 import utils
 
 # Configuration Constants
@@ -42,6 +43,11 @@ def preprocess(args: argparse.Namespace):
             # Only add POS for source data
             for l in [SRC_LANG]:
                 tag(f"{TEMP_DIR}tmp.{s}.{l}", l)
+
+    # mBART
+    if args.mBART:
+        PRETRAIN = True
+        mBART( TEMP_DIR, f"{TEMP_DIR}pretrain", SRC_LANG, TGT_LANG)
 
     # Learn BPE
     num_bpe_tokens: int = 10000
@@ -94,6 +100,7 @@ def preprocess(args: argparse.Namespace):
         "SCONJ",
         "SYM",
         "VERB",
+        "<mask>"
     ]
     glossary_str = " ".join([f"'{d}'" for d in glossary])
     for s in ["train", "test", "valid"]:
@@ -132,7 +139,7 @@ if __name__ == "__main__":
     parser.add_argument('--src', choices=["de", "ne"], help='the source language')
     parser.add_argument('--tgt', choices=["en"], help='the target language')
     # Parse techniques
-    for technique in ['joint-dropout', 'mRASP', 'part-of-speech']:
+    for technique in ['joint-dropout', 'mRASP', 'part-of-speech', 'mBART']:
         parser.add_argument(f'--{technique}', action=argparse.BooleanOptionalAction)
 
     preprocess(parser.parse_args())
