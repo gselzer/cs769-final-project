@@ -12,3 +12,4 @@ dependencies:
     - subword-nmt
     - torchvision
     - torchaudio
+    - tensorboardX
