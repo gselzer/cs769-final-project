@@ -1,9 +1,9 @@
 rm -rf data-bin
 
-# Step 2: Binarize FINETUNING data
-TEXT=data
+# Step 1: Binarize data
 SRC=$1
 TGT=$2
+TEXT=$3
 fairseq-preprocess --source-lang $SRC --target-lang $TGT \
     --trainpref $TEXT/train --validpref $TEXT/valid --testpref $TEXT/test \
     --destdir data-bin \
@@ -11,7 +11,7 @@ fairseq-preprocess --source-lang $SRC --target-lang $TGT \
     --tgtdict data/join-dict.txt \
     --workers 20
 
-# Train using fairseq
+# Step 2: Train using fairseq
 CUDA_VISIBLE_DEVICES=0 fairseq-train \
     data-bin \
     --arch transformer_iwslt_de_en --share-decoder-input-output-embed \
@@ -34,6 +34,6 @@ CUDA_VISIBLE_DEVICES=0 fairseq-train \
     --encoder-ffn-embed-dim 1024 --decoder-ffn-embed-dim 1024 \
     --encoder-layerdrop 0.0 --decoder-layerdrop 0.2 \
     --activation-dropout 0.3 \
-    --max-epoch 150 \
+    --max-epoch 300 \
     --save-interval 10 \
     --validate-interval 10 \

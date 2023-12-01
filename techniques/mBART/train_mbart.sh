@@ -9,10 +9,10 @@ python preprocess.py \
     --mBART
 
 # Step 2: Pretrain
-bash ./pretrain.sh 
+bash ./train.sh $SRC $TGT data/pretrain
 
 # Step 3: Finetune
-bash ./finetune.sh $SRC $TGT
+bash ./finetune.sh $SRC $TGT data
 
 # Step 4: Evaluate
 if [ ! -d "experiments/results" ]; then
