@@ -122,7 +122,7 @@ class DataDiversification:
 
         # Preprocess initial dataset
         preprocessObj = preprocess.Preprocess()
-        preprocessObj.preprocess()
+        preprocessObj.preprocess(src_lang=src_lang, trg_lang=trg_lang)
        
         if os.path.exists(f"{TRANSLATIONS_DIR}"):
             subprocess.run(f"rm -rf {TRANSLATIONS_DIR}", capture_output=True, text=True, shell=True)
@@ -136,11 +136,13 @@ class DataDiversification:
 
         for i in range(1,self.N+1):
             # Binarize data for both forward and backward models
+            if os.path.exists("data-bin/") and os.path.isdir("data-bin/"):
+                subprocess.run(["rm", "-rf", "data-bin"], capture_output=True, text=True)
             preprocessObj.generate_binarized_data(
-                data_dir='data/binarized-fwd', 
+                data_dir='data-bin/binarized-fwd', 
                 src_lang=src_lang, trg_lang=trg_lang)
             preprocessObj.generate_binarized_data(
-                data_dir='data/binarized-bkwd', 
+                data_dir='data-bin/binarized-bkwd', 
                 src_lang=trg_lang, trg_lang=src_lang)
 
             for j in range(1,self.k+1):
@@ -149,7 +151,7 @@ class DataDiversification:
                 start_time = time.time()
                 print(f"\nBeginning training of forward translation model {i}.{j}")
                 self._train(
-                    data_dir='data/binarized-fwd',
+                    data_dir='data-bin/binarized-fwd',
                     arch=arch_fwd, 
                     src_lang=src_lang, 
                     trg_lang=trg_lang, 
@@ -161,7 +163,7 @@ class DataDiversification:
                 start_time = time.time()
                 print(f"\nBeginning generating M_f{i}.{j}(S)")
                 self._generate(
-                    data_dir='data/binarized-fwd', 
+                    data_dir='data-bin/binarized-fwd', 
                     src_lang=src_lang, 
                     trg_lang=trg_lang, 
                     suffix='_fwd')
@@ -175,7 +177,7 @@ class DataDiversification:
                 start_time = time.time()
                 print(f"\nBeginning training of backward translation model {i}.{j}")
                 self._train(
-                    data_dir='data/binarized-bkwd', 
+                    data_dir='data-bin/binarized-bkwd', 
                     arch=arch_bkwd, 
                     src_lang=trg_lang, 
                     trg_lang=src_lang,
@@ -187,7 +189,7 @@ class DataDiversification:
                 start_time = time.time()
                 print(f"\nBeginning generating M_b{i}.{j}(T)")
                 self._generate(
-                    data_dir='data/binarized-bkwd', 
+                    data_dir='data-bin/binarized-bkwd', 
                     src_lang=trg_lang, 
                     trg_lang=src_lang,
                     suffix='_bkwd')
@@ -209,5 +211,5 @@ class DataDiversification:
                         capture_output=True, text=True, shell=True)
 
             # Preprocess training set with its new sythetic data
-            preprocessObj.preprocess_training_data_only()
+            preprocessObj.preprocess_training_data_only(src_lang=src_lang, trg_lang=trg_lang,)
 
