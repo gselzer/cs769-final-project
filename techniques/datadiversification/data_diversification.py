@@ -58,7 +58,8 @@ class DataDiversification:
                 --activation-dropout 0.3 \
                 --save-interval {self.n_epoch} \
                 --validate-interval {self.n_epoch} \
-                --save-dir models
+                --save-dir models \
+                --cpu
             """, text=True, shell=True, capture_output= (not VERBOSE))
             # --ddp-backend=legacy_ddp \
 
@@ -82,6 +83,7 @@ class DataDiversification:
                     --sacrebleu \
                     --gen-subset train \
                     --post-process subword_nmt \
+                    --cpu \
                     >> output.txt
             """, text=True, shell=True, capture_output = (not VERBOSE))
         else:
@@ -94,6 +96,7 @@ class DataDiversification:
                     --tokenizer moses \
                     --sacrebleu \
                     --gen-subset test \
+                    --cpu \
                     --results-path {results_dir}
             """, text=True, shell=True, capture_output = (not VERBOSE))
 
