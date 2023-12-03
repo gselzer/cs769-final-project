@@ -13,7 +13,7 @@ N_EPOCH_FINAL_MODEL = 80
 
 class DataDiversification:
 
-    def __init__(self, k=3, N=1, n_epoch=80):
+    def __init__(self, k=3, N=1, n_epoch=80, use_gpu=False):
         """
         Parameters:
             k: (int) diversification factor (default = 3)
@@ -23,6 +23,7 @@ class DataDiversification:
         self.k = k
         self.N = N
         self.n_epoch = n_epoch
+        self.use_gpu = use_gpu
 
         log_file = 'dd_logfile'
         if os.path.exists(log_file):
@@ -36,7 +37,7 @@ class DataDiversification:
         if os.path.exists("models/") and os.path.isdir("models/"):
             subprocess.run("rm -rf models", capture_output=True, text=True, shell=True)
         subprocess.run("mkdir models", capture_output=True, text=True, shell=True)
-
+        
         subprocess.run(f"""
             CUDA_VISIBLE_DEVICES=0 fairseq-train \
                 {data_dir} \
@@ -64,7 +65,7 @@ class DataDiversification:
                 --save-interval {self.n_epoch} \
                 --validate-interval {self.n_epoch} \
                 --save-dir models \
-                --cpu
+                {'--cpu' if self.use_gpu else ''}
             """, text=True, shell=True, capture_output= (not VERBOSE))
             # --ddp-backend=legacy_ddp \
 
@@ -88,7 +89,7 @@ class DataDiversification:
                     --sacrebleu \
                     --gen-subset train \
                     --post-process subword_nmt \
-                    --cpu \
+                    {'--cpu' if self.use_gpu else ''} \
                     >> output.txt
             """, text=True, shell=True, capture_output = (not VERBOSE))
         else:
@@ -101,7 +102,7 @@ class DataDiversification:
                     --tokenizer moses \
                     --sacrebleu \
                     --gen-subset test \
-                    --cpu \
+                    {'--cpu' if self.use_gpu else ''} \
                     --results-path {results_dir}
             """, text=True, shell=True, capture_output = (not VERBOSE))
 
