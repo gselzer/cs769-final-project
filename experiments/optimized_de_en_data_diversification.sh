@@ -4,7 +4,9 @@
 cd ../
 
 # Run data diversificaiton which preprocesses the data and trains the models
-python dd_run.py --k 3 --N 1 --n_epoch 60 --use_gpu --arch_fwd "transformer_iwslt_de_en" --arch_bkwd \
+# NOTE: to run using GPU, add flag "--use_gpu" to the python command below. However, we had CUDA
+# memory errors when running with gpu
+python dd_run.py --k 3 --N 1 --n_epoch 60 --arch_fwd "transformer_iwslt_de_en" --arch_bkwd \
     "transformer_wmt_en_de" --src_lang "de" --trg_lang "en"
 
 
