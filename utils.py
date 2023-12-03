@@ -483,6 +483,7 @@ def preprocess_moses(tmp_dir: str, src_lang: str, tgt_lang: str):
         train_tgt = f.read().split("\n")
     with open(f"{tmp_dir}tmp.train.{src_lang}") as f:
         train_src = f.read().split("\n")
+    random.seed(1)
     samples = random.sample(range(len(train_tgt)), no_samples)
     train_tgt = [train_tgt[i] for i in samples]
     train_src = [train_src[i] for i in samples]
@@ -509,6 +510,21 @@ def preprocess_indic(tmp_dir: str, src_lang: str, tgt_lang: str):
                     < {tmp_dir}tmp.{s}.{tgt_lang} > {tmp_dir}tmp.tok.{tgt_lang}")
         os.system(f"perl mosesdecoder/scripts/tokenizer/lowercase.perl < {tmp_dir}tmp.tok.{tgt_lang} > \
                     {tmp_dir}tmp.{s}.{tgt_lang}")
+
+    # Sample the data
+    no_samples = 20000
+    with open(f"{tmp_dir}tmp.train.{tgt_lang}") as f:
+        train_tgt = f.read().split("\n")
+    with open(f"{tmp_dir}tmp.train.{src_lang}") as f:
+        train_src = f.read().split("\n")
+    random.seed(1)
+    samples = random.sample(range(len(train_tgt)), no_samples)
+    train_tgt = [train_tgt[i] for i in samples]
+    train_src = [train_src[i] for i in samples]
+    with open(f"{tmp_dir}tmp.train.{src_lang}", "w") as f:
+        f.write("\n".join(train_src))
+    with open(f"{tmp_dir}tmp.train.{tgt_lang}", "w") as f:
+        f.write("\n".join(train_tgt))
 
 def preprocess_data(tmp_dir: str, src_lang: str, tgt_lang: str):
     if (src_lang == "de" and tgt_lang == "en"):
