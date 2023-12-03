@@ -9,6 +9,7 @@ TRANSLATIONS_DIR = "translations/"
 TEMP_DIR = "temp/"
 DEBUG = True
 VERBOSE = True # set to False if you want to hide the outputs of fairseq-train and fairseq-generate
+N_EPOCH_FINAL_MODEL = 80
 
 class DataDiversification:
 
@@ -22,7 +23,11 @@ class DataDiversification:
         self.k = k
         self.N = N
         self.n_epoch = n_epoch
-        logging.basicConfig(filename='logfile', 
+
+        log_file = 'dd_logfile'
+        if os.path.exists(log_file):
+            os.remove(log_file)
+        logging.basicConfig(filename=log_file, 
                             format='%(asctime)s %(levelname)s: %(message)s', 
                             datefmt='%Y-%m-%d %H:%M:%S', 
                             level=logging.INFO)
@@ -168,7 +173,7 @@ class DataDiversification:
                 
                 # Train M_f on D_r-1
                 start_time = time.time()
-                logging.info(f"\nBeginning training of forward translation model {i}.{j}")
+                logging.info(f"Beginning training of forward translation model {i}.{j}")
                 self._train(
                     data_dir='data-bin/binarized-fwd',
                     arch=arch_fwd, 
@@ -180,7 +185,7 @@ class DataDiversification:
                 
                 # Generate M_f(S)
                 start_time = time.time()
-                logging.info(f"\nBeginning generating M_f{i}.{j}(S)")
+                logging.info(f"Beginning generating M_f{i}.{j}(S)")
                 self._generate(
                     data_dir='data-bin/binarized-fwd', 
                     src_lang=src_lang, 
@@ -194,7 +199,7 @@ class DataDiversification:
                 
                 # Train M_b on D_r-1'
                 start_time = time.time()
-                logging.info(f"\nBeginning training of backward translation model {i}.{j}")
+                logging.info(f"Beginning training of backward translation model {i}.{j}")
                 self._train(
                     data_dir='data-bin/binarized-bkwd', 
                     arch=arch_bkwd, 
@@ -206,7 +211,7 @@ class DataDiversification:
 
                 # Generate M_b(T) 
                 start_time = time.time()
-                logging.info(f"\nBeginning generating M_b{i}.{j}(T)")
+                logging.info(f"Beginning generating M_b{i}.{j}(T)")
                 self._generate(
                     data_dir='data-bin/binarized-bkwd', 
                     src_lang=trg_lang, 
@@ -240,9 +245,9 @@ class DataDiversification:
             src_lang=src_lang, trg_lang=trg_lang)
 
         # Train final forward model
-        self.n_epoch = 80
+        self.n_epoch = N_EPOCH_FINAL_MODEL
         start_time = time.time()
-        logging.info(f"\nBeginning training of final forward translation model")
+        logging.info(f"Beginning training of final forward translation model")
         self._train(
             data_dir='data-bin/binarized-fwd',
             arch=arch_fwd, 
@@ -256,7 +261,7 @@ class DataDiversification:
         if os.path.exists("results/"):
             subprocess.run(["rm", "-rf", "results/"], capture_output=True, text=True)
         start_time = time.time()
-        logging.info(f"\nBeginning evaluating final forward model")
+        logging.info(f"Beginning evaluating final forward model")
         self._generate(
             data_dir='data-bin/binarized-fwd', 
             src_lang=src_lang, 
