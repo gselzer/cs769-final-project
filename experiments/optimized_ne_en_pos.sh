@@ -7,7 +7,7 @@ python preprocess.py \
     --part-of-speech
 
 # Step 2: Train
-bash ./train.sh ne en
+bash ./train.sh ne en data
 
 # Step 3: Evaluate
 if [ ! -d "experiments/results" ]; then
