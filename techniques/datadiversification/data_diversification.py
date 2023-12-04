@@ -134,8 +134,8 @@ class DataDiversification:
                     raise FileNotFoundError(f"'_generate' failed to final results file '{file_path}'.")
 
                 line_count = sum(1 for line in open(file_path))
-                    if line_count == 0:
-                        raise ValueError(f"'_generate' created '{file_path}' with zero lines.")
+                if line_count == 0:
+                    raise ValueError(f"'_generate' created '{file_path}' with zero lines.")
 
     def _append_bitext(self, input_file:str, source_file:str, target_file:str):
         with open(input_file, 'r') as infile, \
