@@ -81,11 +81,11 @@ def preprocess(args: argparse.Namespace):
                 target_file.write(data_to_append)
         else:
             if SRC_LANG == 'ne':
-                shutil.move('data-jd/tmp.train.ne-en.20k.en','temp/tmp.train.en')
-                shutil.move('data-jd/tmp.train.ne-en.20k.ne','temp/tmp.train.ne')
+                shutil.copy('data-jd/tmp.train.ne-en.20k.en','temp/tmp.train.en')
+                shutil.copy('data-jd/tmp.train.ne-en.20k.ne','temp/tmp.train.ne')
             elif SRC_LANG == 'de':
-                shutil.move('data-jd/tmp.train.de-en.10k.en','temp/tmp.train.en')
-                shutil.move('data-jd/tmp.train.de-en.10k.de','temp/tmp.train.de')
+                shutil.copy('data-jd/tmp.train.de-en.10k.en','temp/tmp.train.en')
+                shutil.copy('data-jd/tmp.train.de-en.10k.de','temp/tmp.train.de')
             else:
                 raise Exception('source language needs to be one of "ne" or "de"')
             
