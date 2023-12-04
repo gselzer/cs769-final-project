@@ -69,7 +69,7 @@ def mBART(
             with open(f"{src_dir}tmp.{step}.{lang}", "r") as f:
                 for s in f.read().split("\n"):
                     tv_concat.append(s)
-        with open(f"{os.path.join(output_dir, f'{step}.{lang}')}") as f:
+        with open(f"{os.path.join(output_dir, f'{step}.{lang}')}", "w") as f:
             f.write("\n".join(tv_concat))
 
     
