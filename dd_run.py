@@ -1,7 +1,6 @@
 import argparse
 from techniques.datadiversification import data_diversification
 
-# Set up argument parser
 parser = argparse.ArgumentParser(description='Data Diversification Training Script')
 parser.add_argument('--k', type=int, required=True, help='k value')
 parser.add_argument('--N', type=int, required=True, help='N value')
@@ -10,13 +9,11 @@ parser.add_argument('--arch_fwd', type=str, required=True, help='Architecture fo
 parser.add_argument('--arch_bkwd', type=str, required=True, help='Architecture backward')
 parser.add_argument('--src_lang', type=str, required=True, help='Source language')
 parser.add_argument('--trg_lang', type=str, required=True, help='Target language')
-parser.add_argument('--use_gpu', action='store_true', help='Use GPU for training')
+parser.add_argument('--use_cpu', action='store_true', help='Use CPU only for training')
 
-# Parse arguments
 args = parser.parse_args()
 
-# Create an instance of DataDiversification with command-line arguments, including use_gpu
-dd = data_diversification.DataDiversification(k=args.k, N=args.N, n_epoch=args.n_epoch, use_gpu=args.use_gpu)
+dd = data_diversification.DataDiversification(k=args.k, N=args.N, n_epoch=args.n_epoch, use_cpu=args.use_cpu)
 dd.diversify(
     arch_fwd=args.arch_fwd,
     arch_bkwd=args.arch_bkwd,

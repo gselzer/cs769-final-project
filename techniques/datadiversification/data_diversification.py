@@ -13,7 +13,7 @@ N_EPOCH_FINAL_MODEL = 80
 
 class DataDiversification:
 
-    def __init__(self, k=3, N=1, n_epoch=80, use_gpu=False):
+    def __init__(self, k=3, N=1, n_epoch=80, use_cpu=False):
         """
         Parameters:
             k: (int) diversification factor (default = 3)
@@ -23,7 +23,7 @@ class DataDiversification:
         self.k = k
         self.N = N
         self.n_epoch = n_epoch
-        self.use_gpu = use_gpu
+        self.use_cpu = use_cpu
 
         log_file = 'dd_logfile'
         if os.path.exists(log_file):
@@ -65,7 +65,7 @@ class DataDiversification:
                 --save-interval {self.n_epoch} \
                 --validate-interval {self.n_epoch} \
                 --save-dir models \
-                {'--cpu' if self.use_gpu else ''}
+                {'--cpu' if self.use_cpu else ''}
             """, text=True, shell=True, capture_output= (not VERBOSE))
             # --ddp-backend=legacy_ddp \
 
@@ -89,7 +89,7 @@ class DataDiversification:
                     --sacrebleu \
                     --gen-subset train \
                     --post-process subword_nmt \
-                    {'--cpu' if self.use_gpu else ''} \
+                    {'--cpu' if self.use_cpu else ''} \
                     >> output.txt
             """, text=True, shell=True, capture_output = (not VERBOSE))
         else:
@@ -102,7 +102,7 @@ class DataDiversification:
                     --tokenizer moses \
                     --sacrebleu \
                     --gen-subset test \
-                    {'--cpu' if self.use_gpu else ''} \
+                    {'--cpu' if self.use_cpu else ''} \
                     --results-path {results_dir}
             """, text=True, shell=True, capture_output = (not VERBOSE))
 
