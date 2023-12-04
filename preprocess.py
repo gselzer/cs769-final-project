@@ -55,28 +55,40 @@ def preprocess(args: argparse.Namespace):
                 -s {num_bpe_tokens} -o {TEMP_DIR}code.txt --write-vocabulary {TEMP_DIR}vocab.{TGT_LANG} {TEMP_DIR}vocab.{SRC_LANG}")
     
     if args.joint_dropout:
-        # Joint Dropout
-        wa = utils.WordAligner()
-        wa.word_alignments(source_file=f"{TEMP_DIR}tmp.train.de",
-                            target_file=f"{TEMP_DIR}tmp.train.en",
-                            output_file=f'{TEMP_DIR}eflomal.de.en',
-                            model = '3')
-        JDR = utils.JointDropout(debug=False)
-        JDR.joint_dropout(f"{TEMP_DIR}tmp.train.de", f"{TEMP_DIR}tmp.train.en", f'{TEMP_DIR}eflomal.de.en',
-                          output_dir=f'{TEMP_DIR}', src_suffix='de',trg_suffix='en')
+        if args.gen_jd_data:
+            # Joint Dropout
+            wa = utils.WordAligner()
+            wa.word_alignments(source_file=f"{TEMP_DIR}tmp.train.{SRC_LANG}",
+                                target_file=f"{TEMP_DIR}tmp.train.{TGT_LANG}",
+                                output_file=f'{TEMP_DIR}eflomal.{SRC_LANG}.{TGT_LANG}',
+                                model = '3')
+            JDR = utils.JointDropout(debug=False)
+            JDR.joint_dropout(f"{TEMP_DIR}tmp.train.{SRC_LANG}", f"{TEMP_DIR}tmp.train.{TGT_LANG}", 
+                              f'{TEMP_DIR}eflomal.{SRC_LANG}.{TGT_LANG}', output_dir=f'{TEMP_DIR}', 
+                              src_suffix=SRC_LANG,trg_suffix=TGT_LANG)
 
-        # Concatenate JDR output with the tmp.train.en/tmp.train.de files.
-        with open(f'{TEMP_DIR}jdr.src.de', 'r') as source_file:
-            data_to_append = source_file.read()
+            # Concatenate JDR output with the tmp.train.TGT_LANG/tmp.train.SRC_LANG files.
+            with open(f'{TEMP_DIR}jdr.src.{SRC_LANG}', 'r') as source_file:
+                data_to_append = source_file.read()
 
-        with open(f'{TEMP_DIR}tmp.train.de', 'a') as target_file:
-            target_file.write(data_to_append)
+            with open(f'{TEMP_DIR}tmp.train.{SRC_LANG}', 'a') as target_file:
+                target_file.write(data_to_append)
 
-        with open(f'{TEMP_DIR}jdr.trg.en', 'r') as source_file:
-            data_to_append = source_file.read()
+            with open(f'{TEMP_DIR}jdr.trg.{TGT_LANG}', 'r') as source_file:
+                data_to_append = source_file.read()
 
-        with open(f'{TEMP_DIR}tmp.train.en', 'a') as target_file:
-            target_file.write(data_to_append)
+            with open(f'{TEMP_DIR}tmp.train.{TGT_LANG}', 'a') as target_file:
+                target_file.write(data_to_append)
+        else:
+            if SRC_LANG == 'ne':
+                shutil.move('data-jd/tmp.train.ne-en.20k.en','temp/tmp.train.en')
+                shutil.move('data-jd/tmp.train.ne-en.20k.ne','temp/tmp.train.ne')
+            elif SRC_LANG == 'de':
+                shutil.move('data-jd/tmp.train.de-en.10k.en','temp/tmp.train.en')
+                shutil.move('data-jd/tmp.train.de-en.10k.de','temp/tmp.train.de')
+            else:
+                raise Exception('source language needs to be one of "ne" or "de"')
+            
 
     # Apply BPE
     glossary = [
@@ -139,7 +151,7 @@ if __name__ == "__main__":
     parser.add_argument('--src', choices=["de", "ne"], help='the source language')
     parser.add_argument('--tgt', choices=["en"], help='the target language')
     # Parse techniques
-    for technique in ['joint-dropout', 'mRASP', 'part-of-speech', 'mBART']:
+    for technique in ['joint-dropout', 'mRASP', 'part-of-speech', 'mBART', 'gen-jd-data']:
         parser.add_argument(f'--{technique}', action=argparse.BooleanOptionalAction)
 
     preprocess(parser.parse_args())
