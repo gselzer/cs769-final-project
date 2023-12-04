@@ -8,7 +8,7 @@ def mBART(
         output_dir: str, 
         src_lang: str,
         tgt_lang: str,
-        lambda_value: float = 3.5):
+        lambda_value: float = 1.5):
  
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -69,8 +69,10 @@ def mBART(
             with open(f"{src_dir}tmp.{step}.{lang}", "r") as f:
                 for s in f.read().split("\n"):
                     tv_concat.append(s)
-        with open(f"{os.path.join(output_dir, f'{step}.{lang}')}", "w") as f:
-            f.write("\n".join(tv_concat))
+        
+        for lang in [src_lang, tgt_lang]:
+            with open(f"{os.path.join(output_dir, f'{step}.{lang}')}", "w") as f:
+                f.write("\n".join(tv_concat))
 
     
 
