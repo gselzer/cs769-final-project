@@ -31,7 +31,7 @@ def mBART(
 
     tgt_file = os.path.basename(os.path.join(src_dir, f"tmp.train.{tgt_lang}"))
     if tgt_file.startswith("tmp."):
-        tgt_file = src_file.replace("tmp.", "")
+        tgt_file = tgt_file.replace("tmp.", "")
 
     # noised --> source
     with open(os.path.join(output_dir, f"{src_file}"), "w") as f:
@@ -60,6 +60,18 @@ def mBART(
     for lang in [src_lang, tgt_lang]:
         for s in ["valid", "test"]:
             os.system(f"cp {src_dir}tmp.{s}.{lang} {os.path.join(output_dir, f'{s}.{lang}')}")
+
+
+    # Copy test/validation concatenations
+    for s in ["valid", "test"]:
+        tv_concat = []
+        for lang in [src_lang, tgt_lang]:
+            with open(f"{src_dir}tmp.{s}.{lang}", "r") as f:
+                for s in f.read().split("\n"):
+                    tv_concat.append(s)
+        with open(f"{os.path.join(output_dir, f'{s}.{lang}')}") as f:
+            f.write("\n".join(tv_concat))
+
     
 
 def noising(sentence: str, lambda_value: float):
