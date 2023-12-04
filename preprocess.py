@@ -125,7 +125,7 @@ def preprocess(args: argparse.Namespace):
         os.makedirs(f"{DATA_DIR}pretrain")
         for s in ["train", "test", "valid"]:
             for l in [SRC_LANG, TGT_LANG]:
-                os.system(f"subword-nmt apply-bpe -c {TEMP_DIR}code.txt --vocabulary {TEMP_DIR}vocab.en < \
+                os.system(f"subword-nmt apply-bpe -c {TEMP_DIR}code.txt --vocabulary {TEMP_DIR}vocab.{l} < \
                             {TEMP_DIR}pretrain/{s}.{l} > {DATA_DIR}pretrain/{s}.{l} --glossaries {glossary_str}")
 
     os.system(f"cp {TEMP_DIR}code.txt {DATA_DIR}code.txt")
