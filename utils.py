@@ -407,39 +407,37 @@ def download_de_en_data(tmp_dir: str):
 
 def develop_ne_en_data(tmp_dir: str):
     # Download data
-    if os.path.exists("ne-en"):
-        shutil.rmtree("ne-en")
+    if not os.path.exists("ne-en"):
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/facebookresearch/flores/main/previous_releases/floresv1/data/wikipedia_en_ne_si_test_sets.tgz", "test_sets.tgz")
+        file = tarfile.open("test_sets.tgz")
+        file.extractall()
+        os.remove("test_sets.tgz")
 
-    urllib.request.urlretrieve("https://raw.githubusercontent.com/facebookresearch/flores/main/previous_releases/floresv1/data/wikipedia_en_ne_si_test_sets.tgz", "test_sets.tgz")
-    file = tarfile.open("test_sets.tgz")
-    file.extractall()
-    os.remove("test_sets.tgz")
+        os.mkdir("ne-en")
 
-    os.mkdir("ne-en")
+        for src, tgt in [('devtest', 'valid'), ('test', 'test')]:
+            for l in ['ne', 'en']:
+                outfile = os.path.join("ne-en", f"{tgt}.{l}")
+                os.system(f"cp wikipedia_en_ne_si_test_sets/wikipedia.{src}.ne-en.{l} {outfile}")
+        
+        shutil.rmtree("wikipedia_en_ne_si_test_sets")
 
-    for src, tgt in [('devtest', 'valid'), ('test', 'test')]:
+        # Training data
+        os.system("bash ./download-data.sh")
+
+        train_sets = [
+            'clean-data/all-clean-ne/bible.en-ne',
+            'clean-data/all-clean-ne/bible_dup.en-ne',
+            'clean-data/all-clean-ne/GlobalVoices.en-ne',
+            'clean-data/all-clean-ne/GNOMEKDEUbuntu.en-ne',
+            'clean-data/all-clean-ne/nepali-penn-treebank',
+        ]
         for l in ['ne', 'en']:
-            outfile = os.path.join("ne-en", f"{tgt}.{l}")
-            os.system(f"cp wikipedia_en_ne_si_test_sets/wikipedia.{src}.ne-en.{l} {outfile}")
-    
-    shutil.rmtree("wikipedia_en_ne_si_test_sets")
-
-    # Training data
-    os.system("bash ./download-data.sh")
-
-    train_sets = [
-        'clean-data/all-clean-ne/bible.en-ne',
-        'clean-data/all-clean-ne/bible_dup.en-ne',
-        'clean-data/all-clean-ne/GlobalVoices.en-ne',
-        'clean-data/all-clean-ne/GNOMEKDEUbuntu.en-ne',
-        'clean-data/all-clean-ne/nepali-penn-treebank',
-    ]
-    for l in ['ne', 'en']:
-        files = [f"{s}.{l}" for s in train_sets]
-        outfile = os.path.join("ne-en", f"train.{l}")
-        os.system(f"cat {' '.join(files)} > {outfile}")
-    
-    shutil.rmtree("clean-data")
+            files = [f"{s}.{l}" for s in train_sets]
+            outfile = os.path.join("ne-en", f"train.{l}")
+            os.system(f"cat {' '.join(files)} > {outfile}")
+        
+        shutil.rmtree("clean-data")
     
     # Preprocess data
     for l in ["en", "ne"]:

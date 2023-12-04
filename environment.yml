@@ -12,6 +12,7 @@ dependencies:
   - pip
   - sacremoses
   - numpy < 1.24
+  - sklearn
   - pip:
     - compare-mt
     - numpy < 1.24

@@ -9,6 +9,9 @@ comparisons/
 de-en/
 ne-en/
 
+# POS Tagger
+*.pickle
+
 .vscode/
 __pycache__
 
