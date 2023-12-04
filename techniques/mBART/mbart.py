@@ -13,20 +13,47 @@ def mBART(
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    # Noise training data
+    # concatenate source and target langs, place noised into source and not noised into target
+    concatenation = []
     for lang in [src_lang, tgt_lang] :
         file = os.path.join(src_dir, f"tmp.train.{lang}")
         with open(file, "r") as f:
-            sentences = f.read().split("\n")
+            concatenation.append(s for s in f.read().split("\n"))
+            # sentences = f.read().split("\n")
+
+    noised_concatenation = [noising(sentence, lambda_value) for sentence in concatenation]
+
+
+    src_file = os.path.basename(os.path.join(src_dir, f"tmp.train.{src_lang}"))
+    if src_file.startswith("tmp."):
+        src_file = src_file.replace("tmp.", "")
+
+    tgt_file = os.path.basename(os.path.join(src_dir, f"tmp.train.{tgt_lang}"))
+    if tgt_file.startswith("tmp."):
+        tgt_file = src_file.replace("tmp.", "")
+
+    # noised --> source
+    with open(os.path.join(output_dir, f"{src_file}"), "w") as f:
+        f.write("\n".join(noised_concatenation))
+
+    # not noised --> target
+    with open(os.path.join(output_dir, f"{tgt_file}"), "w") as f:
+        f.write("\n".join(concatenation))
+
+    # # Noise training data
+    # for lang in [src_lang, tgt_lang] :
+    #     file = os.path.join(src_dir, f"tmp.train.{lang}")
+    #     with open(file, "r") as f:
+    #         sentences = f.read().split("\n")
         
-        noised_sentences = [noising(sentence, lambda_value) for sentence in sentences]
+    #     noised_sentences = [noising(sentence, lambda_value) for sentence in sentences]
 
-        src_file = os.path.basename(file)
-        if src_file.startswith("tmp."):
-            src_file = src_file.replace("tmp.", "")
+    #     src_file = os.path.basename(file)
+    #     if src_file.startswith("tmp."):
+    #         src_file = src_file.replace("tmp.", "")
 
-        with open(os.path.join(output_dir, f"{src_file}"), "w") as f:
-            f.write("\n".join(noised_sentences))
+    #     with open(os.path.join(output_dir, f"{src_file}"), "w") as f:
+    #         f.write("\n".join(noised_sentences))
         
     # Copy test/validation data
     for lang in [src_lang, tgt_lang]:
