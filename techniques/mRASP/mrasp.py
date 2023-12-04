@@ -15,7 +15,7 @@ def _mRASP(
         os.makedirs(output_dir)
     for src_file in src_files:
         with open(src_file, "r") as f:
-            src = f.readlines()
+            src = f.read().split("\n")
         
         new_src = []
         for line in src:

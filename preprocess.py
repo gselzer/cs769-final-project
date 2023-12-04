@@ -34,7 +34,9 @@ def preprocess(args: argparse.Namespace):
         mRASP(
             [f"{TEMP_DIR}tmp.train.{SRC_LANG}", f"{TEMP_DIR}tmp.valid.{SRC_LANG}", f"{TEMP_DIR}tmp.test.{SRC_LANG}"],
             [f"{TEMP_DIR}tmp.train.{TGT_LANG}", f"{TEMP_DIR}tmp.valid.{TGT_LANG}", f"{TEMP_DIR}tmp.test.{TGT_LANG}"],
-            f"{TEMP_DIR}pretrain"
+            f"{TEMP_DIR}pretrain",
+            src_lang="ne",
+            tgt_lang="en",
         )
 
     # POS tag data
