@@ -18,7 +18,8 @@ def mBART(
     for lang in [src_lang, tgt_lang] :
         file = os.path.join(src_dir, f"tmp.train.{lang}")
         with open(file, "r") as f:
-            concatenation.append(s for s in f.read().split("\n"))
+            for s in f.read().split("\n"):
+                concatenation.append(s)
             # sentences = f.read().split("\n")
 
     noised_concatenation = [noising(sentence, lambda_value) for sentence in concatenation]
