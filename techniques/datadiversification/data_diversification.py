@@ -106,26 +106,36 @@ class DataDiversification:
                     --results-path {results_dir}
             """, text=True, shell=True, capture_output = (not VERBOSE))
 
-        if DEBUG:
-            file_path = 'output.txt'
-            if not os.path.exists(file_path):
-                raise FileNotFoundError(f"'_generate' failed to generate intermediate file '{file_path}'.")
+        if results_dir is None:
+            if DEBUG:
+                file_path = 'output.txt'
+                if not os.path.exists(file_path):
+                    raise FileNotFoundError(f"'_generate' failed to generate intermediate file '{file_path}'.")
 
-            line_count = sum(1 for line in open('output.txt'))
-            if line_count == 0:
-                raise ValueError("'_generate' created '{file_path}' with zero lines.")
+                line_count = sum(1 for line in open('output.txt'))
+                if line_count == 0:
+                    raise ValueError("'_generate' created '{file_path}' with zero lines.")
 
-        subprocess.run(f"grep -E '^S-[0-9]+|^T-[0-9]+' output.txt > outputfile.txt",
-                       capture_output=True, text=True, shell=True)
+            subprocess.run(f"grep -E '^S-[0-9]+|^T-[0-9]+' output.txt > outputfile.txt",
+                           capture_output=True, text=True, shell=True)
 
-        if DEBUG:
-            file_path = 'outputfile.txt'
-            if not os.path.exists(file_path):
-                raise FileNotFoundError(f"'_generate' failed to generate the file '{file_path}'.")
+            if DEBUG:
+                file_path = 'outputfile.txt'
+                if not os.path.exists(file_path):
+                    raise FileNotFoundError(f"'_generate' failed to generate the file '{file_path}'.")
 
-            line_count = sum(1 for line in open('outputfile.txt'))
-            if line_count == 0:
-                raise ValueError(f"'_generate' created '{file_path}' with zero lines.") 
+                line_count = sum(1 for line in open('outputfile.txt'))
+                if line_count == 0:
+                    raise ValueError(f"'_generate' created '{file_path}' with zero lines.")
+        else:
+            if DEBUG:
+                file_path = f'{results_dir}generate-test.txt'
+                if not os.path.exists(file_path):
+                    raise FileNotFoundError(f"'_generate' failed to final results file '{file_path}'.")
+
+                line_count = sum(1 for line in open(file_path))
+                    if line_count == 0:
+                        raise ValueError(f"'_generate' created '{file_path}' with zero lines.")
 
     def _append_bitext(self, input_file:str, source_file:str, target_file:str):
         with open(input_file, 'r') as infile, \
