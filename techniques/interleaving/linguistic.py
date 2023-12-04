@@ -118,7 +118,7 @@ def _tag_sklearn(file_name: str, lang: str):
     clf = _get_classifier(lang)
 
     with open(file_name, "r") as f:
-        lines = f.readlines()
+        lines = f.read().split("\n")
     
     new_lines = []
     for line in lines:
