@@ -56,17 +56,17 @@ def mBART(
     #     with open(os.path.join(output_dir, f"{src_file}"), "w") as f:
     #         f.write("\n".join(noised_sentences))
         
-    # Copy test/validation data
-    for lang in [src_lang, tgt_lang]:
-        for s in ["valid", "test"]:
-            os.system(f"cp {src_dir}tmp.{s}.{lang} {os.path.join(output_dir, f'{s}.{lang}')}")
+    # # Copy test/validation data
+    # for lang in [src_lang, tgt_lang]:
+    #     for s in ["valid", "test"]:
+    #         os.system(f"cp {src_dir}tmp.{s}.{lang} {os.path.join(output_dir, f'{s}.{lang}')}")
 
 
     # Copy test/validation concatenations
-    for s in ["valid", "test"]:
+    for step in ["valid", "test"]:
         tv_concat = []
         for lang in [src_lang, tgt_lang]:
-            with open(f"{src_dir}tmp.{s}.{lang}", "r") as f:
+            with open(f"{src_dir}tmp.{step}.{lang}", "r") as f:
                 for s in f.read().split("\n"):
                     tv_concat.append(s)
         with open(f"{os.path.join(output_dir, f'{s}.{lang}')}") as f:
