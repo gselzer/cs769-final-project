@@ -16,4 +16,4 @@ bash ./finetune.sh de en data
 if [ ! -d "experiments/results" ]; then
     mkdir -p experiments/results
 fi
-bash ./evaluate.sh $NAME
+bash ./evaluate.sh $NAME checkpoint_last
