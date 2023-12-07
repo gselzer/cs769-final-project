@@ -9,15 +9,17 @@ cd ../
 python dd_run.py --k 3 --N 1 --n_epoch 60 --arch_fwd "transformer_iwslt_de_en" --arch_bkwd \
     "transformer_wmt_en_de" --src_lang "ne" --trg_lang "en" --use_cpu
 
+# Create results dir if it doesn't exist
+DIR="experiments/results/optimized_ne_en_data_diversification"
+if [ ! -d "$DIR" ]; then
+    mkdir -p "$DIR"
+fi
 
-# Delete added directories, besided data-bin (contains the binarized partially synthetic dataset) and models
-#directories=("translations" "temp" "data")
+# Copy model file to the new results path
+cp models/checkpoint_best_fwd.pt "$DIR/checkpoint.pt"
 
-#for dir in "${directories[@]}"; do
-#    if [ -d "$dir" ]; then
-#        echo "Deleting directory: $dir"
-#        rm -rf "$dir"
-#    else
-#        echo "Directory does not exist: $dir"
-#    fi
-#done
+# Copy data to the new results path
+cp -r data/ "$DIR/"
+
+# Copy test output to the new results path
+cp results/generate-test.txt "$DIR/generate-test.txt"
