@@ -74,7 +74,7 @@ class DataDiversification:
             if not os.path.exists(file_path):
                 raise FileNotFoundError(f"'_train' failed to generate the model '{file_path}'.")
 
-    def _generate(self, data_dir: str, src_lang: str, trg_lang: str, suffix: str, results_dir=None):
+    def _generate(self, data_dir: str, src_lang: str, trg_lang: str, suffix: str, results_dir=None, model_name=None):
         for file in ['output.txt', 'outputfile.txt']:
             if os.path.exists(file):
                 subprocess.run(f"rm -rf {file}", capture_output=True, text=True, shell=True)
@@ -118,6 +118,12 @@ class DataDiversification:
 
             subprocess.run(f"grep -E '^S-[0-9]+|^H-[0-9]+' output.txt > outputfile.txt",
                            capture_output=True, text=True, shell=True)
+            
+            int_model_dir = "intermediate-model-outputs/"
+            if not os.path.exists(int_model_dir):
+                subprocess.run(f"mkdir {int_model_dir}")
+            
+            subprocess.run(f"cp output.txt {int_model_dir}output.model_name")
 
             if DEBUG:
                 file_path = 'outputfile.txt'
@@ -163,6 +169,11 @@ class DataDiversification:
             subprocess.run(f"rm -rf {TRANSLATIONS_DIR}", capture_output=True, text=True, shell=True)
         subprocess.run(f"mkdir {TRANSLATIONS_DIR}", capture_output=True, text=True, shell=True)
 
+        # Delete intermediate model generate output dir
+        int_model_dir = "intermediate-model-outputs/"
+        if os.path.exists(int_model_dir):
+            subprocess.run(f"rm -rf {int_model_dir}")
+
         # Copy original dataset to translations directory
         subprocess.run(f"cp temp/tmp.train.{src_lang} {TRANSLATIONS_DIR}/train.{src_lang}", 
                         capture_output=True, text=True, shell=True)
@@ -201,7 +212,8 @@ class DataDiversification:
                     data_dir='data-bin/binarized-fwd', 
                     src_lang=src_lang, 
                     trg_lang=trg_lang, 
-                    suffix='_fwd')
+                    suffix='_fwd',
+                    model_name=f'{i}.{j}.fwd')
                 logging.info(f"Finished generating M_f{i}.{j}(S) in {(time.time() - start_time)/60:.2f} minutes")
                 
                 # Append (S, M_f(S)) to D_r
@@ -227,7 +239,8 @@ class DataDiversification:
                     data_dir='data-bin/binarized-bkwd', 
                     src_lang=trg_lang, 
                     trg_lang=src_lang,
-                    suffix='_bkwd')
+                    suffix='_bkwd',
+                    model_name=f'{i}.{j}.bkwd')
                 logging.info(f"Finished generating M_b{i}.{j}(T) in {(time.time() - start_time)/60:.2f} minutes")
 
                 # Append (M_b(T), T) to D_r
@@ -278,6 +291,7 @@ class DataDiversification:
             src_lang=src_lang, 
             trg_lang=trg_lang, 
             suffix='_fwd',
-            results_dir='results/')
+            results_dir='results/',
+            model_name='final_model')
         logging.info(f"Finished evaluating final forward model \
                  {(time.time() - start_time)/60:.2f} minutes")
