@@ -116,7 +116,7 @@ class DataDiversification:
                 if line_count == 0:
                     raise ValueError("'_generate' created '{file_path}' with zero lines.")
 
-            subprocess.run(f"grep -E '^S-[0-9]+|^T-[0-9]+' output.txt > outputfile.txt",
+            subprocess.run(f"grep -E '^S-[0-9]+|^H-[0-9]+' output.txt > outputfile.txt",
                            capture_output=True, text=True, shell=True)
 
             if DEBUG:
@@ -146,10 +146,10 @@ class DataDiversification:
                 if line.startswith('S-'):
                     content_start = line.find('\t') + 1  
                     srcfile.write(line[content_start:])  
-                elif line.startswith('T-'):
-                    content_start = line.find('\t') + 1  
-                    tgtfile.write(line[content_start:]) 
-
+                elif line.startswith('H-'):
+                    parts = line.strip().split('\t')
+                    tgtfile.write(parts[2]+'\n')
+    
     def diversify(self, arch_fwd:str, arch_bkwd:str, src_lang:str, trg_lang:str):
         """
         Performs the data diversification.
