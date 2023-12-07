@@ -120,10 +120,7 @@ class DataDiversification:
                            capture_output=True, text=True, shell=True)
             
             int_model_dir = "intermediate-model-outputs/"
-            if not os.path.exists(int_model_dir):
-                subprocess.run(f"mkdir {int_model_dir}")
-            
-            subprocess.run(f"cp output.txt {int_model_dir}output.model_name")
+            subprocess.run(f"cp output.txt {int_model_dir}output.model_name", capture_output=True, text=True, shell=True)
 
             if DEBUG:
                 file_path = 'outputfile.txt'
@@ -172,7 +169,8 @@ class DataDiversification:
         # Delete intermediate model generate output dir
         int_model_dir = "intermediate-model-outputs/"
         if os.path.exists(int_model_dir):
-            subprocess.run(f"rm -rf {int_model_dir}")
+            subprocess.run(f"rm -rf {int_model_dir}", capture_output=True, text=True, shell=True)
+        subprocess.run(f"mkdir {int_model_dir}", capture_output=True, text=True, shell=True)
 
         # Copy original dataset to translations directory
         subprocess.run(f"cp temp/tmp.train.{src_lang} {TRANSLATIONS_DIR}/train.{src_lang}", 
