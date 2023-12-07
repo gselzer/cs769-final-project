@@ -9,7 +9,7 @@ TRANSLATIONS_DIR = "translations/"
 TEMP_DIR = "temp/"
 DEBUG = True
 VERBOSE = True # set to False if you want to hide the outputs of fairseq-train and fairseq-generate
-N_EPOCH_FINAL_MODEL = 80
+N_EPOCH_FINAL_MODEL = 150
 
 class DataDiversification:
 
