@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Change directory to two levels up where dd_train.py is located
-cd ../
-
 # Run data diversificaiton which preprocesses the data and trains the models
 # NOTE: to run using GPU, remove the flag "--use_cpu" to the python command below. However, we had CUDA
 # memory errors when running with gpu
