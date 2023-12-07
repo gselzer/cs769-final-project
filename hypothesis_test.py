@@ -1,8 +1,8 @@
 """
 Example command:
-    python hypothesis_test.py -b experiments/results/optimized_de_en \
-        -c experiments/results/optimized_de_en_data_diversification experiments/results/optimized_de_en_joint-dropout \ 
-        -p 0.5 -N 1000
+python hypothesis_test.py -b experiments/results/optimized_de_en \
+    -c experiments/results/optimized_de_en_data_diversification experiments/results/optimized_de_en_joint-dropout \ 
+    -p 0.05 -N 1000 -o hypothesis_test_results.txt
 """
 
 import argparse
@@ -12,12 +12,12 @@ import subprocess
 import re
 from scipy.stats import ttest_rel
 from tqdm import tqdm
+import math
 
 def score(trg_file_path:str, tran_file_path:str):
     """ Generate sacre bleu score """
     command = f"fairseq-score --sys {tran_file_path} --ref {trg_file_path}"
-    result = subprocess.run('fairseq-score --sys tmp/gen.out.sys --ref tmp/gen.out.ref',
-                        shell=True, text=True, capture_output=True)
+    result = subprocess.run(command, shell=True, text=True, capture_output=True)
     bleu_score =  None
     if result.returncode == 0:
         match = re.search(r'BLEU4 = ([0-9.]+),', result.stdout)
@@ -84,9 +84,9 @@ def t_test(base_scores:list, comparison_scores:list, alpha:int):
     t_statistic, p_value = ttest_rel(base_scores, comparison_scores)
     
     if p_value < alpha:
-        print(f'\t The difference in BLEU scores is statistically significant.\n\t\tp={p_value}')
+        return f'\t The difference in BLEU scores is statistically significant.\n\t\tp={p_value}'
     else:
-        print(f'\t The difference in BLEU scores is not statistically significant.\n\t\tp={p_value}')
+        return f'\t The difference in BLEU scores is not statistically significant.\n\t\tp={p_value}'
 
 
 def experiment_name(file_path:str):
@@ -98,6 +98,33 @@ def experiment_name(file_path:str):
 
     return None
 
+
+def confidence_interval(bleu_scores:list):
+    """ Estimates the 95% CI given a list of bleu scores """
+    bleu_scores.sort()
+
+    n = len(bleu_scores)
+    idx_lower = math.ceil(0.025*n)
+    idx_upper = math.ceil(0.975*n)
+    if idx_lower == n:
+        ci_lower = bleu_scores[idx_lower-1]
+    else:
+        ci_lower = bleu_scores[idx_lower]
+    if idx_upper == n:
+        ci_upper= bleu_scores[idx_upper-1]
+    else:
+        ci_upper= bleu_scores[idx_upper]
+
+    return ci_lower, ci_upper
+
+
+def descriptive_statatistics(bleu_scores:str):
+    """ Calculates the mean and standard deviation of boostrapped bleu scores  """
+    mu = sum(bleu_scores) / len(bleu_scores)
+    sum_squared_diffs = sum([(i-mu)**2 for i in bleu_scores])
+    sigma = math.sqrt(sum_squared_diffs / len(bleu_scores))
+
+    return mu, sigma
 
 def main():
     parser = argparse.ArgumentParser(description="Performs boostrapping and t-test")
@@ -113,6 +140,7 @@ def main():
             help='Paths to methd outputs to be compared')
     parser.add_argument('-N', type=int, default=1000, help='Number of bootstrap rounds.')
     parser.add_argument('-p','--p-value', type=float, default=0.05, help='Significance level for the t-test (default: 0.05).')
+    parser.add_argument('-o','--output-file', type=str, required=True, help='File the scores will be statistical written to.')
 
     args = parser.parse_args()
 
@@ -123,6 +151,14 @@ def main():
     
     print(f"\nGenerating bootstrap scores for base method: {experiment_name(args.base_method)}")
     base_scores = generate_bootstrap_scores(args.base_method, n_samples, args.N)
+    with open(args.output_file, 'w') as file:
+        file.write(f"Statistics for base method {experiment_name(args.base_method)}\n")
+        mu, sigma = descriptive_statatistics(base_scores)
+        file.write(f"\tBootstrapped scores mean: {mu:.3f}\n")
+        file.write(f"\tBootstrapped scores std deviation: {sigma:.3f}\n")
+        ci_lower, ci_upper = confidence_interval(base_scores)
+        file.write(f"\tBootstrapped scores 95% CI: ({ci_lower:.3f},{ci_upper:.3f})\n")
+
    
     comparison_scores = []
     for path in args.comparison_methods:
@@ -130,10 +166,21 @@ def main():
         comparison_scores.append(generate_bootstrap_scores(path, n_samples, args.N))
 
     base_experiment_name = experiment_name(args.base_method)
-    for i in range(len(args.comparison_methods)):
-        comparision_experiment_name = experiment_name(args.comparison_methods[i])
-        print(f"\nComparing {base_experiment_name} with {comparision_experiment_name}:")
-        t_test(base_scores, comparison_scores[i], args.p_value)
+    with open(args.output_file, 'a') as file:
+        for i in range(len(args.comparison_methods)):
+            comparision_experiment_name = experiment_name(args.comparison_methods[i])
+            print(f"\nComparing {base_experiment_name} with {comparision_experiment_name}:")
+            file.write(f"\nComparing {base_experiment_name} with {comparision_experiment_name}:\n")
+            result_str = t_test(base_scores, comparison_scores[i], args.p_value)
+            print(result_str)
+            file.write(result_str+'\n')
+            file.write(f"\tStatistics for comparison method {comparision_experiment_name}\n")
+            mu, sigma = descriptive_statatistics(comparison_scores[i])
+            file.write(f"\t\tBootstrapped scores mean: {mu:.3f}\n")
+            file.write(f"\t\tBootstrapped scores std deviation: {sigma:.3f}\n")
+            ci_lower, ci_upper = confidence_interval(comparison_scores[i])
+            file.write(f"\t\tBootstrapped scores 95% CI: ({ci_lower:.3f},{ci_upper:.3f})\n")
+
     
 
 if __name__ == "__main__":
