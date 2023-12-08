@@ -29,6 +29,8 @@ def _mRASP(
         new_src = []
         for line in src:
             tokens = line.split()
+            if tokens == []:
+                continue
             # NB Dictionary quality is generally poor for low-resource languages.
             # Many words may not be represented in the dictionary.
             # Here we try our best to adjust the replacement probability
@@ -57,9 +59,14 @@ def _mRASP(
         t = os.path.basename(tgt_file)
         if t.startswith("tmp."):
             t = t.replace("tmp.", "")
+        new_tgt = []
+        for line in tgt:
+            if line.split() == []:
+                continue
+            new_tgt.append(line)
+            new_tgt.append(line)
         with open(os.path.join(output_dir, t), "w") as f:
-            for line in tgt:
-                f.write(f"{line}\n{line}\n")
+            f.write("\n".join(new_tgt))
     
     with open(f"mrasp_stats.{src_lang}-{tgt_lang}", "w") as f:
         f.write(f"{src_lang}-{tgt_lang} RASP using dictionary with {len(dictionary)} words")
