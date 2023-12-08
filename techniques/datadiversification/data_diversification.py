@@ -78,6 +78,9 @@ class DataDiversification:
         for file in ['output.txt', 'outputfile.txt']:
             if os.path.exists(file):
                 subprocess.run(f"rm -rf {file}", capture_output=True, text=True, shell=True)
+
+        int_model_dir = "intermediate-model-outputs/"
+
         if results_dir is None:
             subprocess.run(f"""
                 fairseq-generate {data_dir} \
@@ -91,6 +94,20 @@ class DataDiversification:
                     --post-process subword_nmt \
                     {'--cpu' if self.use_cpu else ''} \
                     >> output.txt
+            """, text=True, shell=True, capture_output = (not VERBOSE))
+        
+        elif results_dir == int_model_dir:
+            subprocess.run(f"""
+                fairseq-generate {data_dir} \
+                    --path models/checkpoint_best{suffix}.pt \
+                    --beam 5 \
+                    --max-tokens 4096 \
+                    --source-lang {src_lang} --target-lang {trg_lang} \
+                    --tokenizer moses \
+                    --sacrebleu \
+                    --gen-subset test \
+                    {'--cpu' if self.use_cpu else ''} \
+                    --results-path {results_dir}
             """, text=True, shell=True, capture_output = (not VERBOSE))
         else:
             subprocess.run(f"""
@@ -119,7 +136,6 @@ class DataDiversification:
             subprocess.run(f"grep -E '^S-[0-9]+|^H-[0-9]+' output.txt > outputfile.txt",
                            capture_output=True, text=True, shell=True)
             
-            int_model_dir = "intermediate-model-outputs/"
             subprocess.run(f"cp output.txt {int_model_dir}output.{model_name}", capture_output=True, text=True, shell=True)
 
             if DEBUG:
@@ -130,6 +146,8 @@ class DataDiversification:
                 line_count = sum(1 for line in open('outputfile.txt'))
                 if line_count == 0:
                     raise ValueError(f"'_generate' created '{file_path}' with zero lines.")
+        elif results_dir == int_model_dir:
+            pass
         else:
             if DEBUG:
                 file_path = f'{results_dir}generate-test.txt'
@@ -213,6 +231,18 @@ class DataDiversification:
                     suffix='_fwd',
                     model_name=f'{i}.{j}.fwd')
                 logging.info(f"Finished generating M_f{i}.{j}(S) in {(time.time() - start_time)/60:.2f} minutes")
+
+                # Generate intermediate test result
+                start_time = time.time()
+                logging.info(f"Beginning generating M_f{i}.{j}(S) intermediate test results")
+                self._generate(
+                    data_dir='data-bin/binarized-fwd', 
+                    src_lang=src_lang, 
+                    trg_lang=trg_lang, 
+                    suffix='_fwd',
+                    model_name=f'{i}.{j}.fwd',
+                    results_dir=int_model_dir)
+                logging.info(f"Finished generating M_f{i}.{j}(S) intermediate test results in {(time.time() - start_time)/60:.2f} minutes")
                 
                 # Append (S, M_f(S)) to D_r
                 self._append_bitext("outputfile.txt", f"{TRANSLATIONS_DIR}/train.{src_lang}", 
@@ -240,6 +270,18 @@ class DataDiversification:
                     suffix='_bkwd',
                     model_name=f'{i}.{j}.bkwd')
                 logging.info(f"Finished generating M_b{i}.{j}(T) in {(time.time() - start_time)/60:.2f} minutes")
+
+                # Generate intermediate test result
+                start_time = time.time()
+                logging.info(f"Beginning generating M_b{i}.{j}(T) intermediate test results")
+                self._generate(
+                    data_dir='data-bin/binarized-bkwd', 
+                    src_lang=trg_lang, 
+                    trg_lang=src_lang,
+                    suffix='_bkwd',
+                    model_name=f'{i}.{j}.bkwd',
+                    results_dir=int_model_dir)
+                logging.info(f"Finished generating M_b{i}.{j}(T) intermediate test results in {(time.time() - start_time)/60:.2f} minutes")
 
                 # Append (M_b(T), T) to D_r
                 self._append_bitext("outputfile.txt", f"{TRANSLATIONS_DIR}/train.{trg_lang}", 
