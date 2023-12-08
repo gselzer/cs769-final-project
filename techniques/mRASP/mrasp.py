@@ -43,6 +43,7 @@ def _mRASP(
             stats[src_file]["total"] += len(words)
             stats[src_file]["translated"] += k
             new_src.append(" ".join(tokens))
+            new_src.append(line)
             
         src_file = os.path.basename(src_file)
         if src_file.startswith("tmp."):
@@ -51,10 +52,14 @@ def _mRASP(
             f.write("\n".join(new_src))
     
     for tgt_file in tgt_files:
+        with open(tgt_file) as f:
+            tgt = f.read().split("\n")
         t = os.path.basename(tgt_file)
         if t.startswith("tmp."):
             t = t.replace("tmp.", "")
-        foo = os.system(f"cp {tgt_file} {os.path.join(output_dir, t)}")
+        with open(os.path.join(output_dir, t), "w") as f:
+            for line in tgt:
+                f.write(f"{line}\n{line}\n")
     
     with open(f"mrasp_stats.{src_lang}-{tgt_lang}", "w") as f:
         f.write(f"{src_lang}-{tgt_lang} RASP using dictionary with {len(dictionary)} words")
