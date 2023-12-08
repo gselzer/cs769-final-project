@@ -232,6 +232,10 @@ class DataDiversification:
                     model_name=f'{i}.{j}.fwd')
                 logging.info(f"Finished generating M_f{i}.{j}(S) in {(time.time() - start_time)/60:.2f} minutes")
 
+                # Append (S, M_f(S)) to D_r
+                self._append_bitext("outputfile.txt", f"{TRANSLATIONS_DIR}/train.{src_lang}", 
+                                    f"{TRANSLATIONS_DIR}/train.{trg_lang}")
+
                 # Generate intermediate test result
                 start_time = time.time()
                 logging.info(f"Beginning generating M_f{i}.{j}(S) intermediate test results")
@@ -243,10 +247,6 @@ class DataDiversification:
                     model_name=f'{i}.{j}.fwd',
                     results_dir=int_model_dir)
                 logging.info(f"Finished generating M_f{i}.{j}(S) intermediate test results in {(time.time() - start_time)/60:.2f} minutes")
-                
-                # Append (S, M_f(S)) to D_r
-                self._append_bitext("outputfile.txt", f"{TRANSLATIONS_DIR}/train.{src_lang}", 
-                                    f"{TRANSLATIONS_DIR}/train.{trg_lang}")
                 
                 # Train M_b on D_r-1'
                 start_time = time.time()
@@ -271,6 +271,10 @@ class DataDiversification:
                     model_name=f'{i}.{j}.bkwd')
                 logging.info(f"Finished generating M_b{i}.{j}(T) in {(time.time() - start_time)/60:.2f} minutes")
 
+                # Append (M_b(T), T) to D_r
+                self._append_bitext("outputfile.txt", f"{TRANSLATIONS_DIR}/train.{trg_lang}", 
+                                    f"{TRANSLATIONS_DIR}/train.{src_lang}")
+
                 # Generate intermediate test result
                 start_time = time.time()
                 logging.info(f"Beginning generating M_b{i}.{j}(T) intermediate test results")
@@ -282,11 +286,7 @@ class DataDiversification:
                     model_name=f'{i}.{j}.bkwd',
                     results_dir=int_model_dir)
                 logging.info(f"Finished generating M_b{i}.{j}(T) intermediate test results in {(time.time() - start_time)/60:.2f} minutes")
-
-                # Append (M_b(T), T) to D_r
-                self._append_bitext("outputfile.txt", f"{TRANSLATIONS_DIR}/train.{trg_lang}", 
-                                    f"{TRANSLATIONS_DIR}/train.{src_lang}")
-
+                
             # copy D_r to D_r-1
             for file in ['tmp','tmp.tok','tmp.clean','tmp.train']:
                 for l in [src_lang,trg_lang]:
