@@ -21,4 +21,4 @@ cp -r data/ "$DIR/"
 cp results/generate-test.txt "$DIR/generate-test.txt"
 
 # Copy intermediate output to the new results path
-cp intermediate-model-outputs "$DIR"
+cp -r intermediate-model-outputs "$DIR"

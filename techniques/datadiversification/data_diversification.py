@@ -120,7 +120,7 @@ class DataDiversification:
                            capture_output=True, text=True, shell=True)
             
             int_model_dir = "intermediate-model-outputs/"
-            subprocess.run(f"cp output.txt {int_model_dir}output.model_name", capture_output=True, text=True, shell=True)
+            subprocess.run(f"cp output.txt {int_model_dir}output.{model_name}", capture_output=True, text=True, shell=True)
 
             if DEBUG:
                 file_path = 'outputfile.txt'
