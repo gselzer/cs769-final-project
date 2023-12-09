@@ -105,10 +105,10 @@ def _get_classifier(lang: str):
     #     if any(["<" in w for w in words]):
     #         continue
     #     l = len(words)
-    #     X_train.extend(_featurize(words))
+    #     X_test.extend(_featurize(words))
     #     y_test.extend(tags)
-    
     # print(f"Trained Nepali POS Tagger with accuracy: {clf.score(X_test, y_test)}")
+
     shutil.rmtree(tmpfolder)
     pickle.dump(clf, open(filename, "wb"))
 

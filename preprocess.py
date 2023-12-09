@@ -35,8 +35,8 @@ def preprocess(args: argparse.Namespace):
             [f"{TEMP_DIR}tmp.train.{SRC_LANG}", f"{TEMP_DIR}tmp.valid.{SRC_LANG}", f"{TEMP_DIR}tmp.test.{SRC_LANG}"],
             [f"{TEMP_DIR}tmp.train.{TGT_LANG}", f"{TEMP_DIR}tmp.valid.{TGT_LANG}", f"{TEMP_DIR}tmp.test.{TGT_LANG}"],
             f"{TEMP_DIR}pretrain",
-            src_lang="ne",
-            tgt_lang="en",
+            src_lang=SRC_LANG,
+            tgt_lang=TGT_LANG,
         )
 
     # POS tag data

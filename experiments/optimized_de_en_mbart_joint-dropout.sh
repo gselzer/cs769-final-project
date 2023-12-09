@@ -2,15 +2,16 @@ NAME=$(basename "$0")
 
 # Step 1: Preprocess data
 python preprocess.py \
-    --src ne \
+    --src de \
     --tgt en \
-    --mBART
+    --mBART \
+    --joint-dropout
 
 # Step 2: Pretrain
-bash ./train.sh ne en data/pretrain
+bash ./train.sh de en data/pretrain
 
 # Step 3: Finetune
-bash ./finetune.sh ne en data
+bash ./finetune.sh de en data
 
 # Step 4: Evaluate
 if [ ! -d "experiments/results" ]; then

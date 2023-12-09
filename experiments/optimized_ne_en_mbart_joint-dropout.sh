@@ -4,7 +4,8 @@ NAME=$(basename "$0")
 python preprocess.py \
     --src ne \
     --tgt en \
-    --mBART
+    --mBART \
+    --joint-dropout
 
 # Step 2: Pretrain
 bash ./train.sh ne en data/pretrain

@@ -8,42 +8,76 @@ def _mRASP(
         tgt_files: List[str],
         dictionary: Dict[str, List[str]],
         output_dir: str,
+        src_lang,
+        tgt_lang,
         replacement_prob: float = 0.3,
     ):
     # Download dictionary
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
+    
+    stats = {}
     for src_file in src_files:
         with open(src_file, "r") as f:
             src = f.read().split("\n")
         
+        stats[src_file] = dict(
+            total = 0,
+            translated = 0
+        )
+        
         new_src = []
         for line in src:
             tokens = line.split()
+            if tokens == []:
+                continue
             # NB Dictionary quality is generally poor for low-resource languages.
             # Many words may not be represented in the dictionary.
             # Here we try our best to adjust the replacement probability
             words = [(i, x) for i, x in enumerate(tokens) if any(c not in string.punctuation for c in x)]
 
             translatable = [(i, word) for i, word in words if word in dictionary]
-            k = min(len(translatable), replacement_prob * len(words))
+            k = round(min(len(translatable), replacement_prob * len(words)))
             sampled = random.sample(translatable, round(k))
             for idx, word in sampled:
                 tokens[idx] = random.choice(dictionary[word])
+            
+            stats[src_file]["total"] += len(words)
+            stats[src_file]["translated"] += k
             new_src.append(" ".join(tokens))
+            new_src.append(line)
             
         src_file = os.path.basename(src_file)
         if src_file.startswith("tmp."):
             src_file = src_file.replace("tmp.", "")
         with open(os.path.join(output_dir, f"{src_file}"), "w") as f:
             f.write("\n".join(new_src))
-
+    
     for tgt_file in tgt_files:
+        with open(tgt_file) as f:
+            tgt = f.read().split("\n")
         t = os.path.basename(tgt_file)
         if t.startswith("tmp."):
             t = t.replace("tmp.", "")
-        foo = os.system(f"cp {tgt_file} {os.path.join(output_dir, t)}")
-        print(foo)
+        new_tgt = []
+        for line in tgt:
+            if line.split() == []:
+                continue
+            new_tgt.append(line)
+            new_tgt.append(line)
+        with open(os.path.join(output_dir, t), "w") as f:
+            f.write("\n".join(new_tgt))
+    
+    with open(f"mrasp_stats.{src_lang}-{tgt_lang}", "w") as f:
+        f.write(f"{src_lang}-{tgt_lang} RASP using dictionary with {len(dictionary)} words")
+        for filename in stats.keys():
+            f.write(f"{filename} - \n")
+            n = stats[filename]['translated']
+            d = stats[filename]['total']
+            f.write(f"\tnumber of tokens seen: {d}\n")
+            f.write(f"\tnumber of tokens translated: {n}\n")
+            f.write(f"\tProportion: {n/d}\n")
+
 
 def mRASP(
         src_files: List[str],
@@ -60,7 +94,7 @@ def mRASP(
     else:
         raise Exception(f"mRASP not implemented in {src_lang}->{tgt_lang} translation!")
 
-    _mRASP(src_files, tgt_files, dictionary, output_dir, replacement_prob)
+    _mRASP(src_files, tgt_files, dictionary, output_dir, src_lang, tgt_lang, replacement_prob)
 
 def download_de_en_dictionary():
     filename = "de_en/dictionary.txt"

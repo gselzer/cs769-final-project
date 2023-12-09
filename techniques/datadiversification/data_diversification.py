@@ -9,7 +9,7 @@ TRANSLATIONS_DIR = "translations/"
 TEMP_DIR = "temp/"
 DEBUG = True
 VERBOSE = True # set to False if you want to hide the outputs of fairseq-train and fairseq-generate
-N_EPOCH_FINAL_MODEL = 80
+N_EPOCH_FINAL_MODEL = 150
 
 class DataDiversification:
 
@@ -74,10 +74,13 @@ class DataDiversification:
             if not os.path.exists(file_path):
                 raise FileNotFoundError(f"'_train' failed to generate the model '{file_path}'.")
 
-    def _generate(self, data_dir: str, src_lang: str, trg_lang: str, suffix: str, results_dir=None):
+    def _generate(self, data_dir: str, src_lang: str, trg_lang: str, suffix: str, results_dir=None, model_name=None):
         for file in ['output.txt', 'outputfile.txt']:
             if os.path.exists(file):
                 subprocess.run(f"rm -rf {file}", capture_output=True, text=True, shell=True)
+
+        int_model_dir = "intermediate-model-outputs/"
+
         if results_dir is None:
             subprocess.run(f"""
                 fairseq-generate {data_dir} \
@@ -91,6 +94,20 @@ class DataDiversification:
                     --post-process subword_nmt \
                     {'--cpu' if self.use_cpu else ''} \
                     >> output.txt
+            """, text=True, shell=True, capture_output = (not VERBOSE))
+        
+        elif results_dir == int_model_dir:
+            subprocess.run(f"""
+                fairseq-generate {data_dir} \
+                    --path models/checkpoint_best{suffix}.pt \
+                    --beam 5 \
+                    --max-tokens 4096 \
+                    --source-lang {src_lang} --target-lang {trg_lang} \
+                    --tokenizer moses \
+                    --sacrebleu \
+                    --gen-subset test \
+                    {'--cpu' if self.use_cpu else ''} \
+                    --results-path {results_dir}
             """, text=True, shell=True, capture_output = (not VERBOSE))
         else:
             subprocess.run(f"""
@@ -116,8 +133,10 @@ class DataDiversification:
                 if line_count == 0:
                     raise ValueError("'_generate' created '{file_path}' with zero lines.")
 
-            subprocess.run(f"grep -E '^S-[0-9]+|^T-[0-9]+' output.txt > outputfile.txt",
+            subprocess.run(f"grep -E '^S-[0-9]+|^H-[0-9]+' output.txt > outputfile.txt",
                            capture_output=True, text=True, shell=True)
+            
+            subprocess.run(f"cp output.txt {int_model_dir}output.{model_name}", capture_output=True, text=True, shell=True)
 
             if DEBUG:
                 file_path = 'outputfile.txt'
@@ -127,6 +146,8 @@ class DataDiversification:
                 line_count = sum(1 for line in open('outputfile.txt'))
                 if line_count == 0:
                     raise ValueError(f"'_generate' created '{file_path}' with zero lines.")
+        elif results_dir == int_model_dir:
+            pass
         else:
             if DEBUG:
                 file_path = f'{results_dir}generate-test.txt'
@@ -146,10 +167,10 @@ class DataDiversification:
                 if line.startswith('S-'):
                     content_start = line.find('\t') + 1  
                     srcfile.write(line[content_start:])  
-                elif line.startswith('T-'):
-                    content_start = line.find('\t') + 1  
-                    tgtfile.write(line[content_start:]) 
-
+                elif line.startswith('H-'):
+                    parts = line.strip().split('\t')
+                    tgtfile.write(parts[2]+'\n')
+    
     def diversify(self, arch_fwd:str, arch_bkwd:str, src_lang:str, trg_lang:str):
         """
         Performs the data diversification.
@@ -162,6 +183,12 @@ class DataDiversification:
         if os.path.exists(f"{TRANSLATIONS_DIR}"):
             subprocess.run(f"rm -rf {TRANSLATIONS_DIR}", capture_output=True, text=True, shell=True)
         subprocess.run(f"mkdir {TRANSLATIONS_DIR}", capture_output=True, text=True, shell=True)
+
+        # Delete intermediate model generate output dir
+        int_model_dir = "intermediate-model-outputs/"
+        if os.path.exists(int_model_dir):
+            subprocess.run(f"rm -rf {int_model_dir}", capture_output=True, text=True, shell=True)
+        subprocess.run(f"mkdir {int_model_dir}", capture_output=True, text=True, shell=True)
 
         # Copy original dataset to translations directory
         subprocess.run(f"cp temp/tmp.train.{src_lang} {TRANSLATIONS_DIR}/train.{src_lang}", 
@@ -201,12 +228,25 @@ class DataDiversification:
                     data_dir='data-bin/binarized-fwd', 
                     src_lang=src_lang, 
                     trg_lang=trg_lang, 
-                    suffix='_fwd')
+                    suffix='_fwd',
+                    model_name=f'{i}.{j}.fwd')
                 logging.info(f"Finished generating M_f{i}.{j}(S) in {(time.time() - start_time)/60:.2f} minutes")
-                
+
                 # Append (S, M_f(S)) to D_r
                 self._append_bitext("outputfile.txt", f"{TRANSLATIONS_DIR}/train.{src_lang}", 
                                     f"{TRANSLATIONS_DIR}/train.{trg_lang}")
+
+                # Generate intermediate test result
+                start_time = time.time()
+                logging.info(f"Beginning generating M_f{i}.{j}(S) intermediate test results")
+                self._generate(
+                    data_dir='data-bin/binarized-fwd', 
+                    src_lang=src_lang, 
+                    trg_lang=trg_lang, 
+                    suffix='_fwd',
+                    model_name=f'{i}.{j}.fwd',
+                    results_dir=int_model_dir)
+                logging.info(f"Finished generating M_f{i}.{j}(S) intermediate test results in {(time.time() - start_time)/60:.2f} minutes")
                 
                 # Train M_b on D_r-1'
                 start_time = time.time()
@@ -227,13 +267,26 @@ class DataDiversification:
                     data_dir='data-bin/binarized-bkwd', 
                     src_lang=trg_lang, 
                     trg_lang=src_lang,
-                    suffix='_bkwd')
+                    suffix='_bkwd',
+                    model_name=f'{i}.{j}.bkwd')
                 logging.info(f"Finished generating M_b{i}.{j}(T) in {(time.time() - start_time)/60:.2f} minutes")
 
                 # Append (M_b(T), T) to D_r
                 self._append_bitext("outputfile.txt", f"{TRANSLATIONS_DIR}/train.{trg_lang}", 
                                     f"{TRANSLATIONS_DIR}/train.{src_lang}")
 
+                # Generate intermediate test result
+                start_time = time.time()
+                logging.info(f"Beginning generating M_b{i}.{j}(T) intermediate test results")
+                self._generate(
+                    data_dir='data-bin/binarized-bkwd', 
+                    src_lang=trg_lang, 
+                    trg_lang=src_lang,
+                    suffix='_bkwd',
+                    model_name=f'{i}.{j}.bkwd',
+                    results_dir=int_model_dir)
+                logging.info(f"Finished generating M_b{i}.{j}(T) intermediate test results in {(time.time() - start_time)/60:.2f} minutes")
+                
             # copy D_r to D_r-1
             for file in ['tmp','tmp.tok','tmp.clean','tmp.train']:
                 for l in [src_lang,trg_lang]:
@@ -278,6 +331,7 @@ class DataDiversification:
             src_lang=src_lang, 
             trg_lang=trg_lang, 
             suffix='_fwd',
-            results_dir='results/')
+            results_dir='results/',
+            model_name='final_model')
         logging.info(f"Finished evaluating final forward model \
                  {(time.time() - start_time)/60:.2f} minutes")

@@ -40,7 +40,7 @@ class MosesDetokenizer(ToolWrapper):
 
     def __init__(self, lang="en"):
         self.lang = lang
-        program = path.join(path.dirname(__file__), "detokenizer.perl")
+        program = path.join(path.dirname(__file__), "..", "detokenizer.perl")
         # -q = quiet
         # -b = disable output buffering
         argv = ["perl", program, "-q", "-b", "-l", self.lang]
