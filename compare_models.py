@@ -54,6 +54,11 @@ def compare(args: argparse.Namespace):
     with open(actual2_file, mode="w") as f:
         f.writelines("\n".join(actual2))
 
+    # Comparison with significance testing
+    if args.st:
+        os.system(f"compare-mt --output_directory {out_dir}/results {expected_file} {actual1_file} {actual2_file} --compare_scores score_type=bleu,bootstrap=1000,prob_thresh=0.05")
+        return
+
     # Write the comparison
     os.system(f"compare-mt --output_directory {out_dir}/results {expected_file} {actual1_file} {actual2_file}")
     return
@@ -85,4 +90,5 @@ if __name__ == "__main__":
     # Parse source and target languages
     parser.add_argument('--m1', help='the first model output directory', type=os.path.abspath, default="tmp/optimized_de_en")
     parser.add_argument('--m2', help='the second model output directory', type=os.path.abspath, default="tmp/optimized_de_en_pos")
+    parser.add_argument('--st', help='significance testing', action=argparse.BooleanOptionalAction)
     compare(parser.parse_args())
