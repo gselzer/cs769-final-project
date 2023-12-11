@@ -29,6 +29,15 @@ conda env create -f environment.yml
 
 The `experiments` directory contains an executable script for each combination of parallel dataset and implemented technique (including the baseline), for 12 total scripts. Each will locally cache the training data for the specified language pair, prepare the data for training using the specified technique, and then train a model for a pre-specified 150 epochs. Finally, each script will deposit the results of training in an `experiments/results` subfolder for further analysis.
 
+For example, you can run the following to preprocess our German-English translation task dataset, train a baseline model, and generate an output sacreBLEU score:
+```bash
+bash ./experiments/optimized_de_en.sh
+```
+That final score can be printed using the following command:
+```bash
+tail -n 1 ./experiments/results/optimized_de_en/generate-test.txt
+```
+
 Our analysis was performed using the [`fairseq-generate`](https://fairseq.readthedocs.io/en/latest/command_line_tools.html) shipped with the fairseq library, and with the [compare-mt](https://arxiv.org/abs/1903.07926https://github.com/neulab/compare-mt) project. Our compare-mt results can be approximated (considering training randomization) using the `compare-models.py` script:
 
 ```bash
@@ -44,7 +53,7 @@ python compare_models.py --m1 experiments/results/optimized_de_en --m2 experimen
 
 Many **Low-resource** machine translation problems cannot afford the hardware necessary for solutions involving complex language models. In such cases, improving accuracy must be accomplished using other techniques. Our final project seeks to understand how well state-of-the-art techniques for improving accuracy in low-resource situations fare with a *small* language model, across varying degrees of language similarity and varying amounts of technique composition.
 
-## Proposal Information
+## Proposal Information (Functionality deprecated)
 For our proposal, we implement Joint Dropout ([paper](https://arxiv.org/pdf/2307.12835v1.pdf))
 
 ### Setup
