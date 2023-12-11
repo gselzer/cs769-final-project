@@ -35,6 +35,11 @@ Our analysis was performed using the [`fairseq-generate`](https://fairseq.readth
 python compare_models.py --m1 experiments/results/optimized_de_en --m2 experiments/results/optimized_de_en_mrasp
 ```
 
+Add "--st" to include significance testing along with the normal compare-mt results:
+```bash
+python compare_models.py --m1 experiments/results/optimized_de_en --m2 experiments/results/optimized_de_en_mrasp --st
+```
+
 # Proposal Submission
 
 Many **Low-resource** machine translation problems cannot afford the hardware necessary for solutions involving complex language models. In such cases, improving accuracy must be accomplished using other techniques. Our final project seeks to understand how well state-of-the-art techniques for improving accuracy in low-resource situations fare with a *small* language model, across varying degrees of language similarity and varying amounts of technique composition.
